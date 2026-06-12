@@ -373,6 +373,125 @@
   #yesOverlay p { font-size: clamp(1.1rem, 4vw, 1.6rem); line-height: 1.7; max-width: 560px; }
   #yesOverlay .big-shrimp { font-size: clamp(4rem, 15vw, 8rem); margin-bottom: 12px; animation: bounce 1.2s ease-in-out infinite; }
 
+  /* ---------- date ticket ---------- */
+  .ticket {
+    background: #fff;
+    border: 3px dashed var(--pink-deep);
+    border-radius: 18px;
+    padding: 24px 28px;
+    margin-top: 26px;
+    max-width: 440px;
+    width: 100%;
+    text-align: left;
+    box-shadow: 0 12px 32px rgba(194, 24, 91, 0.3);
+    animation: bloom 0.8s ease-out both;
+  }
+  .ticket-head {
+    font-size: 0.78rem;
+    letter-spacing: 2px;
+    color: var(--pink-deep);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .ticket h3 {
+    font-size: 1.35rem;
+    margin-bottom: 14px;
+    color: var(--pink-dark);
+    text-align: center;
+  }
+  .ticket-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px dotted var(--pink);
+    font-size: 1rem;
+    color: var(--pink-dark);
+  }
+  .ticket-row span { font-style: italic; color: var(--pink-deep); white-space: nowrap; }
+  .ticket-row strong { text-align: right; }
+  .ticket-foot {
+    margin-top: 14px;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--pink-deep);
+    text-align: center;
+  }
+
+  /* ---------- easter egg ---------- */
+  #eggTrigger { cursor: pointer; display: inline-block; }
+  #eggTrigger.tapped { animation: eggTap 0.3s ease; }
+  @keyframes eggTap { 50% { transform: scale(1.35) rotate(-14deg); } }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(194, 24, 91, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 110;
+    padding: 24px;
+  }
+  .modal.show { display: flex; }
+  .modal-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: clamp(28px, 5vw, 44px);
+    max-width: 520px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(136, 14, 79, 0.45);
+  }
+  .modal-card h3 { font-size: 1.5rem; color: var(--pink-dark); margin-bottom: 14px; }
+  .modal-card.shake { animation: shake 0.4s ease; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-9px); }
+    75% { transform: translateX(9px); }
+  }
+  #eggInput {
+    font-family: inherit;
+    font-size: 1.15rem;
+    text-align: center;
+    color: var(--pink-dark);
+    border: 2px solid var(--pink);
+    border-radius: 999px;
+    padding: 12px 20px;
+    width: 100%;
+    max-width: 300px;
+    margin: 14px 0 6px;
+    outline: none;
+  }
+  #eggInput:focus { border-color: var(--pink-deep); }
+  #eggHint { min-height: 1.4em; font-size: 0.9rem; font-style: italic; color: var(--pink-deep); margin-bottom: 12px; }
+  .egg-letter { text-align: left; }
+  .egg-letter p {
+    font-style: italic;
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: #8a3b5c;
+    margin-bottom: 12px;
+  }
+  .egg-letter .signature { text-align: right; font-weight: bold; color: var(--pink-dark); font-size: 1.15rem; }
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--pink-deep);
+    cursor: pointer;
+    line-height: 1;
+    padding: 6px;
+  }
+  #yesOverlay .modal-close { position: fixed; top: 14px; right: 18px; z-index: 102; }
+
   .confetti {
     position: fixed;
     top: -5vh;
@@ -430,7 +549,7 @@
       <circle cx="95" cy="96" r="3" fill="#fff59d"/>
     </svg>
 
-    <h1>Happy Birthday,<br>Sam! 🦐</h1>
+    <h1>Happy Birthday,<br>Sam! <span id="eggTrigger">🦐</span></h1>
     <p class="subtitle">To my schwimp — the most beautiful peony in the whole garden 🌸</p>
     <div class="peony-row">🌸 💮 🌺 💮 🌸</div>
     <div class="scroll-hint">scroll down, schwimpy... there's more ⬇️</div>
@@ -543,11 +662,53 @@
 
   <!-- ============ YES OVERLAY ============ -->
   <div id="yesOverlay">
+    <button class="modal-close" aria-label="close">✕</button>
     <div class="big-shrimp">🦐💖🦐</div>
     <h2>IT'S A DATE!!!</h2>
     <p>The bumbles are buzzing 🐝, the rats are squeaking 🐀,
-       and the schwimps are doing little backflips 🦐 —
-       happiest of birthdays, Sam, my schwimp. I love you! 💕</p>
+       and the schwimps are doing little backflips 🦐</p>
+    <div class="ticket">
+      <div class="ticket-head">🎟️ OFFICIAL DATE TICKET — NO. 001 🎟️</div>
+      <h3>Dinner for two schwimps 🦐🦐</h3>
+      <div class="ticket-row"><span>where</span><strong>The Heist, Kingston</strong></div>
+      <div class="ticket-row"><span>when</span><strong>6:00 PM 🕕</strong></div>
+      <div class="ticket-row"><span>with</span><strong>your Johnathan 💕</strong></div>
+      <div class="ticket-row"><span>dress code</span><strong>prettiest peony in the garden 🌸</strong></div>
+      <div class="ticket-foot">non-refundable · "no" not accepted · valid forever</div>
+    </div>
+  </div>
+
+  <!-- ============ EASTER EGG: GATE ============ -->
+  <div class="modal" id="eggGate">
+    <div class="modal-card">
+      <button class="modal-close" aria-label="close">✕</button>
+      <h3>psst... you found something 🤫</h3>
+      <p style="color: var(--pink-deep);">But first — what do we call each other?</p>
+      <input id="eggInput" type="text" autocomplete="off" placeholder="we call each other...">
+      <p id="eggHint"></p>
+      <button class="btn" id="eggSubmit" style="background: linear-gradient(135deg, var(--pink-deep), var(--pink-dark)); color: #fff; font-size: 1.05rem; padding: 12px 34px;">unlock 🔓</button>
+    </div>
+  </div>
+
+  <!-- ============ EASTER EGG: SECRET LETTER ============ -->
+  <div class="modal" id="eggOverlay">
+    <div class="modal-card">
+      <button class="modal-close" aria-label="close">✕</button>
+      <h3>You found the secret 💌</h3>
+      <div class="egg-letter">
+        <p>Sam — of course you found this. You're the smart one.</p>
+        <p>I wanted one little corner of this page to be just for you,
+           away from everyone else. So here it is, just between us:
+           you are the best thing that has ever happened to me. You make
+           the ordinary days my favourite days, and every plan better
+           just by being in it.</p>
+        <p>However many birthdays we get to celebrate, I'll spend every
+           single one trying to make you feel as loved as you make me feel.</p>
+        <p>Happy birthday, my schwimp. I love you more than all the
+           shrimps in the sea.</p>
+        <p class="signature">— your Johnathan 🦐💕</p>
+      </div>
+    </div>
   </div>
 
   <footer>made with 💕 (and a small army of shrimps) for Sam, the best schwimp in the world</footer>
@@ -662,6 +823,71 @@
     }
   }
   yesBtn.addEventListener('click', sayYes);
+
+  // ---------- easter egg: 5 taps on the hero shrimp ----------
+  const eggTrigger = document.getElementById('eggTrigger');
+  const eggGate = document.getElementById('eggGate');
+  const eggOverlay = document.getElementById('eggOverlay');
+  const eggInput = document.getElementById('eggInput');
+  const eggHint = document.getElementById('eggHint');
+  let eggTaps = 0, eggTimer;
+
+  eggTrigger.addEventListener('click', () => {
+    eggTaps++;
+    clearTimeout(eggTimer);
+    eggTimer = setTimeout(() => { eggTaps = 0; }, 4000);
+    eggTrigger.classList.remove('tapped');
+    void eggTrigger.offsetWidth;
+    eggTrigger.classList.add('tapped');
+    if (eggTaps >= 5) {
+      eggTaps = 0;
+      eggGate.classList.add('show');
+      eggInput.value = '';
+      eggHint.textContent = '';
+      eggInput.focus();
+    }
+  });
+
+  function checkEgg() {
+    const guess = eggInput.value.trim().toLowerCase();
+    if (/^s(ch|h)?w+imp(y|s|ies)?$/.test(guess)) {
+      eggGate.classList.remove('show');
+      eggOverlay.classList.add('show');
+      petalBurst();
+    } else {
+      const card = eggGate.querySelector('.modal-card');
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
+      eggHint.textContent = "hmm... the shrimps don't recognize you 🤨";
+    }
+  }
+  document.getElementById('eggSubmit').addEventListener('click', checkEgg);
+  eggInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkEgg(); });
+
+  function petalBurst() {
+    const petals = ['🌸', '💮', '🩷', '💖'];
+    for (let i = 0; i < 30; i++) {
+      setTimeout(() => {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.textContent = petals[Math.floor(Math.random() * petals.length)];
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.fontSize = (18 + Math.random() * 24) + 'px';
+        c.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+        c.style.zIndex = 120;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 6000);
+      }, i * 70);
+    }
+  }
+
+  // ---------- overlay close buttons ----------
+  document.querySelectorAll('.modal-close').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      btn.closest('.modal, #yesOverlay').classList.remove('show');
+    });
+  });
 </script>
 </body>
 </html>
