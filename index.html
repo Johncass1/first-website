@@ -17,28 +17,34 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    --pink-light: #ffe4ef;
+    --bg: #fbfbfd;
+    --bg-alt: #f5f5f7;
+    --ink: #1d1d1f;
+    --ink-soft: #86868b;
     --pink: #ffb6cf;
-    --pink-deep: #f06292;
+    --pink-deep: #e0457b;
     --pink-dark: #c2185b;
-    --cream: #fff8f5;
+    --hairline: rgba(0, 0, 0, 0.08);
+    --glass: rgba(255, 255, 255, 0.72);
   }
 
   html { scroll-behavior: smooth; }
 
   body {
-    font-family: Georgia, 'Times New Roman', serif;
-    background: linear-gradient(180deg, var(--pink-light) 0%, var(--cream) 45%, var(--pink-light) 100%);
-    color: var(--pink-dark);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(180deg, #fff0f6 0%, var(--bg) 28%);
+    color: var(--ink);
     overflow-x: hidden;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ---------- falling petals ---------- */
   .petal {
     position: fixed;
     top: -10vh;
-    font-size: 22px;
+    font-size: 20px;
+    opacity: 0.5;
     pointer-events: none;
     z-index: 5;
     animation: fall linear infinite;
@@ -54,13 +60,13 @@
   /* ---------- floating critters ---------- */
   .critter {
     position: fixed;
-    font-size: 34px;
+    font-size: 30px;
     cursor: pointer;
     z-index: 20;
     user-select: none;
     -webkit-user-select: none;
     animation: floaty ease-in-out infinite alternate;
-    filter: drop-shadow(0 4px 6px rgba(194, 24, 91, 0.2));
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
   }
   @keyframes floaty {
     from { transform: translate(0, 0) rotate(-8deg); }
@@ -76,15 +82,16 @@
   }
   .bubble {
     position: fixed;
-    background: #fff;
-    color: var(--pink-dark);
-    font-family: Georgia, serif;
-    font-size: 0.95rem;
-    font-weight: bold;
-    padding: 8px 14px;
-    border-radius: 16px;
-    border: 2px solid var(--pink);
-    box-shadow: 0 4px 12px rgba(240, 98, 146, 0.3);
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     pointer-events: none;
     z-index: 60;
     white-space: nowrap;
@@ -100,23 +107,62 @@
 
   /* ---------- sections ---------- */
   section {
-    min-height: 100vh;
+    min-height: 92vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 60px 24px;
+    padding: 110px 24px;
     position: relative;
     z-index: 10;
   }
 
+  .eyebrow {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pink-deep);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .section-sub {
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    margin-top: 14px;
+  }
+
+  /* ---------- scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 0.9s cubic-bezier(0.2, 0.6, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
   /* ---------- hero ---------- */
   .hero h1 {
-    font-size: clamp(2.4rem, 8vw, 5rem);
-    margin: 18px 0 8px;
-    text-shadow: 2px 2px 0 #fff, 4px 4px 0 var(--pink);
-    animation: heartbeat 2.2s ease-in-out infinite;
+    font-size: clamp(3rem, 9vw, 5.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 28px 0 10px;
+    color: var(--ink);
+  }
+  .hero h1 .grad {
+    background: linear-gradient(90deg, #ff5f9e, #c2185b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
   }
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
@@ -124,16 +170,22 @@
     20% { transform: scale(1); }
   }
   .hero .subtitle {
-    font-size: clamp(1.1rem, 3.5vw, 1.6rem);
-    font-style: italic;
-    margin-top: 10px;
-    color: var(--pink-deep);
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    font-weight: 400;
+    margin-top: 8px;
+    color: var(--ink-soft);
   }
-  .peony-row { font-size: clamp(2rem, 6vw, 3.4rem); letter-spacing: 8px; }
+  .peony-row {
+    font-size: clamp(1.4rem, 4vw, 2.1rem);
+    letter-spacing: 14px;
+    margin-top: 26px;
+    opacity: 0.9;
+  }
 
   .peony-svg {
-    width: clamp(150px, 30vw, 240px);
-    animation: bloom 1.4s ease-out both, sway 5s ease-in-out 1.4s infinite alternate;
+    width: clamp(130px, 24vw, 200px);
+    animation: bloom 1.4s ease-out both, sway 6s ease-in-out 1.4s infinite alternate;
+    filter: drop-shadow(0 24px 44px rgba(240, 98, 146, 0.28));
   }
   @keyframes bloom {
     from { transform: scale(0) rotate(-30deg); opacity: 0; }
@@ -145,10 +197,10 @@
   }
 
   .scroll-hint {
-    margin-top: 48px;
-    font-size: 1rem;
-    color: var(--pink-deep);
-    animation: bob 1.6s ease-in-out infinite;
+    margin-top: 60px;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    animation: bob 1.8s ease-in-out infinite;
   }
   @keyframes bob {
     0%, 100% { transform: translateY(0); }
@@ -157,24 +209,28 @@
 
   /* ---------- card ---------- */
   .card {
-    background: rgba(255, 255, 255, 0.85);
-    border: 3px dashed var(--pink);
-    border-radius: 30px;
-    padding: clamp(28px, 5vw, 56px);
+    background: var(--glass);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--hairline);
+    border-radius: 28px;
+    padding: clamp(32px, 5vw, 60px);
     max-width: 640px;
-    box-shadow: 0 12px 40px rgba(240, 98, 146, 0.25);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.07);
   }
   .card h2 {
-    font-size: clamp(1.6rem, 5vw, 2.6rem);
+    font-size: clamp(1.7rem, 5vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
     margin-bottom: 18px;
   }
   .card p {
-    font-size: clamp(1rem, 3vw, 1.25rem);
-    line-height: 1.7;
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    line-height: 1.65;
     margin-bottom: 14px;
   }
 
-  .squad { font-size: clamp(2.2rem, 7vw, 3.2rem); margin: 18px 0; }
+  .squad { font-size: clamp(2.2rem, 7vw, 3rem); margin: 18px 0; }
   .squad span {
     display: inline-block;
     margin: 0 10px;
@@ -187,39 +243,42 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-14px); }
   }
-  .squad-caption { font-size: 0.95rem !important; font-style: italic; color: var(--pink-deep); }
+  .squad-caption { font-size: 0.92rem !important; color: var(--ink-soft); }
 
   /* ---------- letter ---------- */
   .letter {
-    background: #fffdf7;
-    border: 1px solid #f3d9e3;
-    border-radius: 8px;
-    padding: clamp(28px, 5vw, 52px);
+    background: #fff;
+    border: 1px solid var(--hairline);
+    border-radius: 24px;
+    padding: clamp(32px, 5vw, 56px);
     max-width: 620px;
     text-align: left;
-    box-shadow: 0 12px 40px rgba(240, 98, 146, 0.25);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.07);
     position: relative;
-    transform: rotate(-1deg);
+    margin-top: 34px;
   }
   .letter::before {
     content: '🦐';
     position: absolute;
-    top: -22px;
+    top: -20px;
     right: 28px;
-    font-size: 2.2rem;
+    font-size: 2rem;
     transform: rotate(15deg);
   }
   .letter p {
+    font-family: 'New York', ui-serif, Georgia, serif;
     font-style: italic;
-    font-size: clamp(1.05rem, 3vw, 1.3rem);
+    font-size: clamp(1.05rem, 3vw, 1.25rem);
     line-height: 1.9;
-    color: #8a3b5c;
+    color: #3a3a3c;
     margin-bottom: 14px;
   }
   .letter .signature {
     text-align: right;
-    font-size: clamp(1.2rem, 3.5vw, 1.5rem);
-    font-weight: bold;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-style: normal;
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    font-weight: 600;
     color: var(--pink-dark);
     margin-top: 18px;
   }
@@ -228,35 +287,33 @@
   .gallery {
     display: flex;
     flex-wrap: wrap;
-    gap: clamp(16px, 3vw, 32px);
+    gap: clamp(16px, 3vw, 28px);
     justify-content: center;
     max-width: 1000px;
-    margin-top: 30px;
+    margin-top: 44px;
   }
   .polaroid {
     background: #fff;
-    padding: 12px 12px 14px;
-    border-radius: 4px;
-    box-shadow: 0 10px 30px rgba(194, 24, 91, 0.25);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    padding: 10px 10px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--hairline);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease;
     width: clamp(220px, 40vw, 300px);
   }
   .polaroid img {
     width: 100%;
     display: block;
-    border-radius: 2px;
+    border-radius: 12px;
   }
   .polaroid figcaption {
-    font-style: italic;
-    font-size: 0.95rem;
-    color: var(--pink-deep);
-    padding-top: 10px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    padding-top: 11px;
   }
-  .polaroid:nth-child(odd)  { transform: rotate(-2.5deg); }
-  .polaroid:nth-child(even) { transform: rotate(2deg); }
   .polaroid:hover {
-    transform: rotate(0deg) scale(1.04);
-    box-shadow: 0 16px 44px rgba(194, 24, 91, 0.4);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.14);
     z-index: 15;
   }
 
@@ -264,10 +321,10 @@
   .reasons {
     display: flex;
     flex-wrap: wrap;
-    gap: 18px;
+    gap: 16px;
     justify-content: center;
     max-width: 760px;
-    margin-top: 30px;
+    margin-top: 44px;
   }
   .flip-card {
     width: 160px;
@@ -288,7 +345,7 @@
     inset: 0;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    border-radius: 18px;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -296,116 +353,72 @@
     padding: 12px;
   }
   .flip-front {
-    background: linear-gradient(135deg, var(--pink), var(--pink-deep));
-    color: #fff;
-    font-weight: bold;
-    box-shadow: 0 8px 20px rgba(240, 98, 146, 0.35);
+    background: #fff;
+    border: 1px solid var(--hairline);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
   }
-  .flip-front .num { font-size: 1.9rem; }
-  .flip-front .hint { font-size: 0.8rem; opacity: 0.9; margin-top: 4px; }
+  .flip-front .num {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #ff5f9e, #c2185b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .flip-front .hint { font-size: 0.8rem; color: var(--ink-soft); margin-top: 4px; }
   .flip-back {
     background: #fff;
-    border: 2px solid var(--pink);
-    color: var(--pink-dark);
+    border: 1px solid rgba(224, 69, 123, 0.35);
+    color: var(--ink);
+    font-weight: 500;
     transform: rotateY(180deg);
-    font-size: 1rem;
+    font-size: 0.98rem;
     line-height: 1.4;
-    box-shadow: 0 8px 20px rgba(240, 98, 146, 0.25);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
   }
   .flip-back .reason-emoji { font-size: 1.6rem; margin-bottom: 6px; }
   .flip-card.special { width: 100%; max-width: 520px; height: 140px; }
   .flip-card.special .flip-front {
-    background: linear-gradient(135deg, var(--pink-deep), var(--pink-dark));
-    font-size: 1.05rem;
-  }
-  .flip-card.special .flip-back { font-size: 1.15rem; font-style: italic; }
-
-  /* ---------- the big question ---------- */
-  .buttons {
-    margin-top: 30px;
-    display: flex;
-    gap: 24px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    min-height: 90px;
-  }
-  .btn {
-    font-family: inherit;
-    font-size: 1.3rem;
-    padding: 16px 44px;
+    background: linear-gradient(135deg, #ff5f9e, #c2185b);
     border: none;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    font-weight: bold;
   }
-  #yesBtn {
-    background: linear-gradient(135deg, var(--pink-deep), var(--pink-dark));
+  .flip-card.special .flip-front .num,
+  .flip-card.special .flip-front .hint {
+    background: none;
+    -webkit-text-fill-color: #fff;
     color: #fff;
-    box-shadow: 0 8px 20px rgba(194, 24, 91, 0.4);
   }
-  #yesBtn:hover { transform: scale(1.08); box-shadow: 0 12px 28px rgba(194, 24, 91, 0.55); }
-  #noBtn {
-    background: #fff;
-    color: var(--pink-deep);
-    border: 2px solid var(--pink);
-    position: relative;
-  }
-  .no-note {
-    margin-top: 14px;
-    font-size: 0.9rem;
-    font-style: italic;
-    color: var(--pink-deep);
-    min-height: 1.4em;
-  }
-
-  /* ---------- yes overlay ---------- */
-  #yesOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(255, 228, 239, 0.96);
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    z-index: 100;
-    padding: 24px;
-  }
-  #yesOverlay.show { display: flex; }
-  #yesOverlay h2 {
-    font-size: clamp(2rem, 7vw, 4rem);
-    margin-bottom: 16px;
-    animation: heartbeat 1.6s ease-in-out infinite;
-  }
-  #yesOverlay p { font-size: clamp(1.1rem, 4vw, 1.6rem); line-height: 1.7; max-width: 560px; }
-  #yesOverlay .big-shrimp { font-size: clamp(4rem, 15vw, 8rem); margin-bottom: 12px; animation: bounce 1.2s ease-in-out infinite; }
+  .flip-card.special .flip-back { font-size: 1.12rem; font-weight: 600; }
 
   /* ---------- date ticket ---------- */
   .ticket {
     background: #fff;
-    border: 3px dashed var(--pink-deep);
-    border-radius: 18px;
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
     padding: 24px 28px;
-    margin-top: 26px;
-    max-width: 440px;
+    margin-top: 30px;
+    max-width: 420px;
     width: 100%;
     text-align: left;
-    box-shadow: 0 12px 32px rgba(194, 24, 91, 0.3);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.14);
     animation: bloom 0.8s ease-out both;
   }
   .ticket-head {
-    font-size: 0.78rem;
-    letter-spacing: 2px;
-    color: var(--pink-deep);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
     margin-bottom: 10px;
     text-align: center;
   }
   .ticket h3 {
-    font-size: 1.35rem;
-    margin-bottom: 14px;
-    color: var(--pink-dark);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+    color: var(--ink);
     text-align: center;
   }
   .ticket-row {
@@ -413,18 +426,23 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 14px;
-    padding: 9px 0;
-    border-bottom: 1px dotted var(--pink);
+    padding: 11px 0;
+    border-bottom: 1px solid var(--hairline);
     font-size: 1rem;
-    color: var(--pink-dark);
   }
-  .ticket-row span { font-style: italic; color: var(--pink-deep); white-space: nowrap; }
-  .ticket-row strong { text-align: right; }
+  .ticket-row span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .ticket-row strong { text-align: right; font-weight: 600; color: var(--ink); }
   .ticket-foot {
-    margin-top: 14px;
-    font-size: 0.8rem;
-    font-style: italic;
-    color: var(--pink-deep);
+    margin-top: 16px;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
     text-align: center;
   }
 
@@ -436,7 +454,9 @@
   .modal {
     position: fixed;
     inset: 0;
-    background: rgba(194, 24, 91, 0.45);
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -454,9 +474,15 @@
     overflow-y: auto;
     text-align: center;
     position: relative;
-    box-shadow: 0 20px 60px rgba(136, 14, 79, 0.45);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
   }
-  .modal-card h3 { font-size: 1.5rem; color: var(--pink-dark); margin-bottom: 14px; }
+  .modal-card h3 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
   .modal-card.shake { animation: shake 0.4s ease; }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
@@ -465,98 +491,106 @@
   }
   #eggInput {
     font-family: inherit;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     text-align: center;
-    color: var(--pink-dark);
-    border: 2px solid var(--pink);
-    border-radius: 999px;
-    padding: 12px 20px;
+    color: var(--ink);
+    background: var(--bg-alt);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 13px 20px;
     width: 100%;
     max-width: 300px;
     margin: 14px 0 6px;
     outline: none;
+    transition: border-color 0.2s ease;
   }
   #eggInput:focus { border-color: var(--pink-deep); }
-  #eggHint { min-height: 1.4em; font-size: 0.9rem; font-style: italic; color: var(--pink-deep); margin-bottom: 12px; }
+  #eggHint { min-height: 1.4em; font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 12px; }
   .egg-letter { text-align: left; }
   .egg-letter p {
+    font-family: 'New York', ui-serif, Georgia, serif;
     font-style: italic;
     font-size: 1.05rem;
     line-height: 1.9;
-    color: #8a3b5c;
+    color: #3a3a3c;
     margin-bottom: 12px;
   }
-  .egg-letter .signature { text-align: right; font-weight: bold; color: var(--pink-dark); font-size: 1.15rem; }
+  .egg-letter .signature {
+    text-align: right;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    color: var(--pink-dark);
+    font-size: 1.1rem;
+  }
   .modal-close {
     position: absolute;
-    top: 10px;
-    right: 16px;
-    background: none;
+    top: 12px;
+    right: 14px;
+    background: var(--bg-alt);
     border: none;
-    font-size: 1.5rem;
-    color: var(--pink-deep);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+    color: var(--ink-soft);
     cursor: pointer;
     line-height: 1;
-    padding: 6px;
+    padding: 0;
   }
-  #yesOverlay .modal-close { position: fixed; top: 14px; right: 18px; z-index: 102; }
-
-  .confetti {
-    position: fixed;
-    top: -5vh;
-    font-size: 28px;
-    pointer-events: none;
-    z-index: 101;
-    animation: confettiFall linear forwards;
-  }
-  @keyframes confettiFall {
-    to { transform: translateY(115vh) rotate(720deg); }
-  }
+  #yesOverlay .modal-close { position: fixed; top: 16px; right: 18px; z-index: 102; }
 
   /* ---------- song player ---------- */
   .song-btn {
-    margin-top: 26px;
+    margin-top: 30px;
     font-family: inherit;
-    font-size: 1.05rem;
-    font-weight: bold;
-    color: var(--pink-dark);
-    background: #fff;
-    border: 2px solid var(--pink);
-    border-radius: 999px;
-    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+    background: var(--ink);
+    border: none;
+    border-radius: 980px;
+    padding: 13px 28px;
     cursor: pointer;
-    box-shadow: 0 6px 16px rgba(240, 98, 146, 0.3);
-    transition: transform 0.15s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
   }
-  .song-btn:hover { transform: scale(1.05); }
+  .song-btn:hover { transform: scale(1.04); opacity: 0.88; }
   .mini-player {
     position: fixed;
     bottom: 14px;
     left: 14px;
     z-index: 95;
-    background: #fff;
-    border: 2px solid var(--pink);
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid var(--hairline);
+    border-radius: 18px;
     padding: 10px;
-    box-shadow: 0 10px 30px rgba(194, 24, 91, 0.35);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
   }
   .mini-player iframe { display: block; border: none; border-radius: 10px; }
   .mini-player .player-label {
     font-size: 0.78rem;
-    font-style: italic;
-    color: var(--pink-deep);
+    color: var(--ink-soft);
     text-align: center;
-    padding-top: 6px;
+    padding-top: 7px;
   }
-  .mini-player .modal-close { top: -12px; right: -12px; background: #fff; border: 2px solid var(--pink); border-radius: 50%; font-size: 1rem; width: 30px; height: 30px; padding: 0; }
+  .mini-player .modal-close {
+    top: -10px;
+    right: -10px;
+    background: #fff;
+    border: 1px solid var(--hairline);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
 
   /* ---------- birthday cake ---------- */
-  .cake-wrap { margin-top: 34px; display: flex; flex-direction: column; align-items: center; }
+  .cake-wrap { margin-top: 44px; display: flex; flex-direction: column; align-items: center; }
   .candles {
     display: flex;
     gap: 26px;
     align-items: flex-end;
     margin-bottom: -4px;
+    position: relative;
     z-index: 2;
   }
   .candle {
@@ -587,7 +621,7 @@
     transform-origin: bottom center;
     background: radial-gradient(circle at 50% 70%, #fff59d 0%, #ffd54f 40%, #ff9800 100%);
     border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
-    box-shadow: 0 0 18px 6px rgba(255, 167, 38, 0.55);
+    box-shadow: 0 0 18px 6px rgba(255, 167, 38, 0.5);
     animation: flicker 0.3s ease-in-out infinite alternate;
   }
   @keyframes flicker {
@@ -616,26 +650,108 @@
     border-radius: 14px;
     margin: 0 auto;
   }
-  .layer-top    { width: 62%; height: 46px; background: linear-gradient(180deg, #ffd1e1 0 45%, #f8849f 45%); }
-  .layer-mid    { width: 80%; height: 52px; background: linear-gradient(180deg, #ffe0eb 0 40%, #f06292 40%); margin-top: -8px !important; }
-  .layer-bottom { width: 100%; height: 60px; background: linear-gradient(180deg, #ffd1e1 0 40%, #d8467d 40%); margin-top: -8px !important; }
+  .layer-top    { width: 62%; height: 46px; background: linear-gradient(180deg, #ffd9e6 0 45%, #f78ca8 45%); }
+  .layer-mid    { width: 80%; height: 52px; background: linear-gradient(180deg, #ffe4ee 0 40%, #ef6a9a 40%); margin-top: -8px !important; }
+  .layer-bottom { width: 100%; height: 60px; background: linear-gradient(180deg, #ffd9e6 0 40%, #d8537f 40%); margin-top: -8px !important; }
   .plate {
     width: 115%;
     height: 16px;
     background: #fff;
     border-radius: 50%;
     margin: -6px auto 0;
-    box-shadow: 0 8px 20px rgba(194, 24, 91, 0.3);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
     position: relative;
     left: -7.5%;
   }
   #wishMsg {
     min-height: 2em;
-    margin-top: 22px;
-    font-size: 1.2rem;
-    font-style: italic;
-    color: var(--pink-dark);
-    font-weight: bold;
+    margin-top: 26px;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ---------- the big question ---------- */
+  .buttons {
+    margin-top: 30px;
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 90px;
+  }
+  .btn {
+    font-family: inherit;
+    font-size: 1.15rem;
+    font-weight: 500;
+    padding: 15px 38px;
+    border: none;
+    border-radius: 980px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  }
+  #yesBtn {
+    background: var(--pink-deep);
+    color: #fff;
+    box-shadow: 0 10px 26px rgba(224, 69, 123, 0.35);
+  }
+  #yesBtn:hover { transform: scale(1.06); opacity: 0.92; }
+  #noBtn {
+    background: #e8e8ed;
+    color: var(--ink);
+    position: relative;
+  }
+  .no-note {
+    margin-top: 14px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    min-height: 1.4em;
+  }
+
+  /* ---------- yes overlay ---------- */
+  #yesOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(251, 251, 253, 0.88);
+    -webkit-backdrop-filter: saturate(180%) blur(30px);
+    backdrop-filter: saturate(180%) blur(30px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 100;
+    padding: 24px;
+    overflow-y: auto;
+  }
+  #yesOverlay.show { display: flex; }
+  #yesOverlay h2 {
+    font-size: clamp(2rem, 7vw, 3.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    color: var(--ink);
+    animation: heartbeat 1.6s ease-in-out infinite;
+  }
+  #yesOverlay p {
+    font-size: clamp(1rem, 3.5vw, 1.25rem);
+    line-height: 1.7;
+    max-width: 560px;
+    color: var(--ink-soft);
+  }
+  #yesOverlay .big-shrimp { font-size: clamp(3.4rem, 13vw, 6.5rem); margin-bottom: 12px; animation: bounce 1.2s ease-in-out infinite; }
+
+  .confetti {
+    position: fixed;
+    top: -5vh;
+    font-size: 28px;
+    pointer-events: none;
+    z-index: 101;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(115vh) rotate(720deg); }
   }
 
   /* ---------- reduced motion ---------- */
@@ -646,13 +762,14 @@
       transition-duration: 0.01ms !important;
     }
     .petal, .confetti { display: none !important; }
+    .reveal { opacity: 1 !important; transform: none !important; }
   }
 
   footer {
     text-align: center;
-    padding: 30px;
-    font-style: italic;
-    color: var(--pink-deep);
+    padding: 48px 24px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
     position: relative;
     z-index: 10;
   }
@@ -693,7 +810,7 @@
       <circle cx="95" cy="96" r="3" fill="#fff59d"/>
     </svg>
 
-    <h1>Happy Birthday,<br>Sam! <span id="eggTrigger">🦐</span></h1>
+    <h1>Happy Birthday,<br><span class="grad">Sam</span> <span id="eggTrigger">🦐</span></h1>
     <p class="subtitle">To my schwimp — the most beautiful peony in the whole garden 🌸</p>
     <div class="peony-row">🌸 💮 🌺 💮 🌸</div>
     <button class="song-btn" id="songBtn">🎵 press play, schwimp (our song)</button>
@@ -702,6 +819,7 @@
 
   <!-- ============ LETTER ============ -->
   <section>
+    <span class="eyebrow">A note from your Johnathan</span>
     <div class="letter">
       <p>Sam, I wanted to wish a Happy Birthday to my favourite person
          in the whole world! This is one of many gifts that I want to
@@ -714,8 +832,9 @@
 
   <!-- ============ BIRTHDAY CAKE ============ -->
   <section>
-    <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">Your cake, schwimp 🎂</h2>
-    <p style="font-style: italic; color: var(--pink-deep); margin-top: 10px;">(tap the candles to blow them out)</p>
+    <span class="eyebrow">Make a wish</span>
+    <h2 class="section-title">Your cake, schwimp. 🎂</h2>
+    <p class="section-sub">(tap the candles to blow them out)</p>
     <div class="cake-wrap">
       <div class="candles">
         <div class="candle"><div class="flame"></div></div>
@@ -736,7 +855,8 @@
 
   <!-- ============ PHOTO GALLERY ============ -->
   <section>
-    <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">The Schwimp Archives 📸</h2>
+    <span class="eyebrow">The Schwimp Archives</span>
+    <h2 class="section-title">Some of my favourite moments. 📸</h2>
     <div class="gallery">
       <figure class="polaroid">
         <img loading="lazy" decoding="async" src="photos/photo1.jpg" alt="Sam smiling in a sunny garden">
@@ -759,8 +879,9 @@
 
   <!-- ============ REASONS ============ -->
   <section>
-    <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">8 reasons you're my favourite schwimp 🦐</h2>
-    <p style="font-style: italic; color: var(--pink-deep); margin-top: 10px;">(tap a card, schwimpy)</p>
+    <span class="eyebrow">Eight reasons</span>
+    <h2 class="section-title">Why you're my favourite schwimp. 🦐</h2>
+    <p class="section-sub">(tap a card, schwimpy)</p>
     <div class="reasons">
       <div class="flip-card"><div class="flip-inner">
         <div class="flip-face flip-front"><span class="num">1</span><span class="hint">tap me 🌸</span></div>
@@ -883,7 +1004,7 @@
 <script>
   // ---------- falling peony petals ----------
   const petalEmojis = ['🌸', '💮', '🌺', '🩷'];
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < 10; i++) {
     const p = document.createElement('div');
     p.className = 'petal';
     p.textContent = petalEmojis[i % petalEmojis.length];
@@ -1109,6 +1230,18 @@
       btn.closest('.modal, #yesOverlay').classList.remove('show');
     });
   });
+
+  // ---------- scroll reveal ----------
+  document.querySelectorAll('section > *').forEach((el) => el.classList.add('reveal'));
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 </script>
 </body>
 </html>
