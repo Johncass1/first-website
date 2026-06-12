@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Happy Birthday, Sam! 🦐💕</title>
+<meta name="description" content="A very important message for Sam, delivered by bumbles, rats, and schwimps.">
+<meta name="theme-color" content="#f06292">
+<meta property="og:title" content="A very important message for Sam 🦐🌸">
+<meta property="og:description" content="The bumbles, the rats, and the schwimps have assembled. Tap to open your birthday surprise.">
+<meta property="og:image" content="https://johncass1.github.io/first-website/photos/photo2.jpg">
+<meta property="og:url" content="https://johncass1.github.io/first-website/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%90%3C/text%3E%3C/svg%3E">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -504,6 +513,141 @@
     to { transform: translateY(115vh) rotate(720deg); }
   }
 
+  /* ---------- song player ---------- */
+  .song-btn {
+    margin-top: 26px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: var(--pink-dark);
+    background: #fff;
+    border: 2px solid var(--pink);
+    border-radius: 999px;
+    padding: 12px 28px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(240, 98, 146, 0.3);
+    transition: transform 0.15s ease;
+  }
+  .song-btn:hover { transform: scale(1.05); }
+  .mini-player {
+    position: fixed;
+    bottom: 14px;
+    left: 14px;
+    z-index: 95;
+    background: #fff;
+    border: 2px solid var(--pink);
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 10px 30px rgba(194, 24, 91, 0.35);
+  }
+  .mini-player iframe { display: block; border: none; border-radius: 10px; }
+  .mini-player .player-label {
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--pink-deep);
+    text-align: center;
+    padding-top: 6px;
+  }
+  .mini-player .modal-close { top: -12px; right: -12px; background: #fff; border: 2px solid var(--pink); border-radius: 50%; font-size: 1rem; width: 30px; height: 30px; padding: 0; }
+
+  /* ---------- birthday cake ---------- */
+  .cake-wrap { margin-top: 34px; display: flex; flex-direction: column; align-items: center; }
+  .candles {
+    display: flex;
+    gap: 26px;
+    align-items: flex-end;
+    margin-bottom: -4px;
+    z-index: 2;
+  }
+  .candle {
+    width: 16px;
+    height: 52px;
+    background: repeating-linear-gradient(45deg, #fff, #fff 6px, var(--pink) 6px, var(--pink) 12px);
+    border-radius: 6px 6px 2px 2px;
+    position: relative;
+    cursor: pointer;
+  }
+  .candle::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 8px;
+    background: #6d4c41;
+  }
+  .flame {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    width: 16px;
+    height: 22px;
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+    background: radial-gradient(circle at 50% 70%, #fff59d 0%, #ffd54f 40%, #ff9800 100%);
+    border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+    box-shadow: 0 0 18px 6px rgba(255, 167, 38, 0.55);
+    animation: flicker 0.3s ease-in-out infinite alternate;
+  }
+  @keyframes flicker {
+    from { transform: translateX(-50%) scale(1) rotate(-4deg); }
+    to   { transform: translateX(-50%) scale(1.12, 1.25) rotate(4deg); }
+  }
+  .smoke {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    font-size: 16px;
+    transform: translateX(-50%);
+    animation: smokeUp 1.6s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes smokeUp {
+    from { transform: translateX(-50%) translateY(0); opacity: 0.9; }
+    to   { transform: translateX(-50%) translateY(-44px); opacity: 0; }
+  }
+  .cake {
+    width: min(300px, 80vw);
+    position: relative;
+    z-index: 1;
+  }
+  .cake .layer {
+    border-radius: 14px;
+    margin: 0 auto;
+  }
+  .layer-top    { width: 62%; height: 46px; background: linear-gradient(180deg, #ffd1e1 0 45%, #f8849f 45%); }
+  .layer-mid    { width: 80%; height: 52px; background: linear-gradient(180deg, #ffe0eb 0 40%, #f06292 40%); margin-top: -8px !important; }
+  .layer-bottom { width: 100%; height: 60px; background: linear-gradient(180deg, #ffd1e1 0 40%, #d8467d 40%); margin-top: -8px !important; }
+  .plate {
+    width: 115%;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    margin: -6px auto 0;
+    box-shadow: 0 8px 20px rgba(194, 24, 91, 0.3);
+    position: relative;
+    left: -7.5%;
+  }
+  #wishMsg {
+    min-height: 2em;
+    margin-top: 22px;
+    font-size: 1.2rem;
+    font-style: italic;
+    color: var(--pink-dark);
+    font-weight: bold;
+  }
+
+  /* ---------- reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .petal, .confetti { display: none !important; }
+  }
+
   footer {
     text-align: center;
     padding: 30px;
@@ -552,6 +696,7 @@
     <h1>Happy Birthday,<br>Sam! <span id="eggTrigger">🦐</span></h1>
     <p class="subtitle">To my schwimp — the most beautiful peony in the whole garden 🌸</p>
     <div class="peony-row">🌸 💮 🌺 💮 🌸</div>
+    <button class="song-btn" id="songBtn">🎵 press play, schwimp (our song)</button>
     <div class="scroll-hint">scroll down, schwimpy... there's more ⬇️</div>
   </section>
 
@@ -567,24 +712,46 @@
     </div>
   </section>
 
+  <!-- ============ BIRTHDAY CAKE ============ -->
+  <section>
+    <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">Your cake, schwimp 🎂</h2>
+    <p style="font-style: italic; color: var(--pink-deep); margin-top: 10px;">(tap the candles to blow them out)</p>
+    <div class="cake-wrap">
+      <div class="candles">
+        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"><div class="flame"></div></div>
+      </div>
+      <div class="cake">
+        <div class="layer layer-top"></div>
+        <div class="layer layer-mid"></div>
+        <div class="layer layer-bottom"></div>
+        <div class="plate"></div>
+      </div>
+      <p id="wishMsg"></p>
+    </div>
+  </section>
+
   <!-- ============ PHOTO GALLERY ============ -->
   <section>
     <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">The Schwimp Archives 📸</h2>
     <div class="gallery">
       <figure class="polaroid">
-        <img src="photos/photo1.jpg" alt="Sam smiling in a sunny garden">
+        <img loading="lazy" decoding="async" src="photos/photo1.jpg" alt="Sam smiling in a sunny garden">
         <figcaption>the prettiest schwimp in the garden 🌸</figcaption>
       </figure>
       <figure class="polaroid">
-        <img src="photos/photo2.jpg" alt="Sam and Johnathan in front of tulips">
+        <img loading="lazy" decoding="async" src="photos/photo2.jpg" alt="Sam and Johnathan in front of tulips">
         <figcaption>tulip scouting (the peonies were busy) 🌷</figcaption>
       </figure>
       <figure class="polaroid">
-        <img src="photos/photo3.jpg" alt="Sam and Johnathan windswept by the water">
+        <img loading="lazy" decoding="async" src="photos/photo3.jpg" alt="Sam and Johnathan windswept by the water">
         <figcaption>two windswept schwimps 🌊</figcaption>
       </figure>
       <figure class="polaroid">
-        <img src="photos/photo4.jpg" alt="Sam and Johnathan with two police horses">
+        <img loading="lazy" decoding="async" src="photos/photo4.jpg" alt="Sam and Johnathan with two police horses">
         <figcaption>making new friends (the horses, mostly) 🐴</figcaption>
       </figure>
     </div>
@@ -881,6 +1048,60 @@
       }, i * 70);
     }
   }
+
+  // ---------- our song ----------
+  const songBtn = document.getElementById('songBtn');
+  songBtn.addEventListener('click', () => {
+    if (document.querySelector('.mini-player')) return;
+    const player = document.createElement('div');
+    player.className = 'mini-player';
+    player.innerHTML =
+      '<button class="modal-close" aria-label="close">✕</button>' +
+      '<iframe width="272" height="153" src="https://www.youtube.com/embed/O_BEFyNNIvM?autoplay=1" ' +
+      'title="I Got a Name - Jim Croce" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
+      '<div class="player-label">I Got a Name — Jim Croce 🎶</div>';
+    player.querySelector('.modal-close').addEventListener('click', () => {
+      player.remove();
+      songBtn.textContent = '🎵 press play, schwimp (our song)';
+    });
+    document.body.appendChild(player);
+    songBtn.textContent = '🎶 now playing: our song 💕';
+  });
+
+  // ---------- birthday cake candles ----------
+  let candlesOut = 0;
+  const wishMsg = document.getElementById('wishMsg');
+  document.querySelectorAll('.candle').forEach((candle) => {
+    candle.addEventListener('click', () => {
+      const flame = candle.querySelector('.flame');
+      if (!flame) return;
+      flame.remove();
+      const smoke = document.createElement('div');
+      smoke.className = 'smoke';
+      smoke.textContent = '💨';
+      candle.appendChild(smoke);
+      setTimeout(() => smoke.remove(), 1600);
+      candlesOut++;
+      if (candlesOut === 5) {
+        wishMsg.textContent = 'yayyy!! did you make a wish, schwimp? 🌠💕';
+        const treats = ['🎂', '🌸', '🦐', '💖', '🎉', '🐝'];
+        for (let i = 0; i < 25; i++) {
+          setTimeout(() => {
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.textContent = treats[Math.floor(Math.random() * treats.length)];
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.fontSize = (18 + Math.random() * 22) + 'px';
+            c.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 6000);
+          }, i * 80);
+        }
+      } else {
+        wishMsg.textContent = (5 - candlesOut) + ' to go... keep blowing, schwimp 🌬️';
+      }
+    });
+  });
 
   // ---------- overlay close buttons ----------
   document.querySelectorAll('.modal-close').forEach((btn) => {
