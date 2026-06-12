@@ -368,12 +368,19 @@
     display: none;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     text-align: center;
     z-index: 100;
     padding: 24px;
+    overflow-y: auto;
   }
   #yesOverlay.show { display: flex; }
+  .overlay-content {
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
   #yesOverlay h2 {
     font-size: clamp(2rem, 7vw, 4rem);
     margin-bottom: 16px;
@@ -381,6 +388,13 @@
   }
   #yesOverlay p { font-size: clamp(1.1rem, 4vw, 1.6rem); line-height: 1.7; max-width: 560px; }
   #yesOverlay .big-shrimp { font-size: clamp(4rem, 15vw, 8rem); margin-bottom: 12px; animation: bounce 1.2s ease-in-out infinite; }
+  @media (max-height: 820px) {
+    #yesOverlay .big-shrimp { font-size: 3rem; margin-bottom: 6px; }
+    #yesOverlay h2 { font-size: 2rem; margin-bottom: 10px; }
+    #yesOverlay p { font-size: 1.05rem; }
+    #yesOverlay .ticket { margin-top: 18px; padding: 18px 24px; }
+    #yesOverlay .ticket-row { padding: 7px 0; }
+  }
 
   /* ---------- date ticket ---------- */
   .ticket {
@@ -830,6 +844,7 @@
   <!-- ============ YES OVERLAY ============ -->
   <div id="yesOverlay">
     <button class="modal-close" aria-label="close">✕</button>
+    <div class="overlay-content">
     <div class="big-shrimp">🦐💖🦐</div>
     <h2>IT'S A DATE!!!</h2>
     <p>The bumbles are buzzing 🐝, the rats are squeaking 🐀,
@@ -842,6 +857,7 @@
       <div class="ticket-row"><span>with</span><strong>your Johnathan 💕</strong></div>
       <div class="ticket-row"><span>dress code</span><strong>prettiest peony in the garden 🌸</strong></div>
       <div class="ticket-foot">non-refundable · "no" not accepted · valid forever</div>
+    </div>
     </div>
   </div>
 
