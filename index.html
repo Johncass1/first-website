@@ -670,9 +670,66 @@
     position: relative;
     z-index: 10;
   }
+
+  /* ---------- enter screen ---------- */
+  #enterScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: linear-gradient(160deg, #ffe4ef 0%, #ffd1e3 50%, #fff0f5 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    transition: opacity 0.9s ease, visibility 0.9s ease;
+  }
+  #enterScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  #enterScreen .envelope {
+    font-size: clamp(4rem, 16vw, 7rem);
+    animation: bob 2s ease-in-out infinite;
+    filter: drop-shadow(0 14px 28px rgba(194, 24, 91, 0.3));
+  }
+  #enterScreen h2 {
+    font-size: clamp(1.9rem, 7vw, 3.2rem);
+    color: var(--pink-dark);
+    margin: 22px 0 8px;
+    text-shadow: 2px 2px 0 #fff, 4px 4px 0 var(--pink);
+  }
+  #enterScreen p {
+    font-style: italic;
+    color: var(--pink-deep);
+    font-size: clamp(1rem, 3.5vw, 1.2rem);
+  }
+  .enter-btn {
+    margin-top: 38px;
+    font-family: inherit;
+    font-size: 1.35rem;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(135deg, var(--pink-deep), var(--pink-dark));
+    border: none;
+    border-radius: 999px;
+    padding: 18px 56px;
+    cursor: pointer;
+    box-shadow: 0 10px 26px rgba(194, 24, 91, 0.45);
+    animation: heartbeat 2s ease-in-out infinite;
+    transition: transform 0.15s ease;
+  }
+  .enter-btn:hover { transform: scale(1.07); }
+  body.locked { overflow: hidden; }
 </style>
 </head>
 <body>
+
+  <!-- ============ ENTER SCREEN ============ -->
+  <div id="enterScreen">
+    <div class="envelope">💌</div>
+    <h2>A special delivery<br>for Sam</h2>
+    <p>sealed with a schwimp 🦐</p>
+    <button class="enter-btn" id="enterBtn">Enter 🌸</button>
+  </div>
 
   <!-- ============ HERO ============ -->
   <section class="hero">
@@ -1124,6 +1181,15 @@
     btn.addEventListener('click', () => {
       btn.closest('.modal, #yesOverlay').classList.remove('show');
     });
+  });
+
+  // ---------- enter screen ----------
+  document.body.classList.add('locked');
+  document.getElementById('enterBtn').addEventListener('click', () => {
+    document.getElementById('enterScreen').classList.add('hidden');
+    document.body.classList.remove('locked');
+    window.scrollTo(0, 0);
+    petalBurst();
   });
 </script>
 </body>
