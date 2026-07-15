@@ -728,11 +728,19 @@
     color: #a98b6f;
     padding-left: 0.42em;
   }
-  .enter-btn {
+  .enter-ui {
     position: absolute;
-    left: 50%;
-    bottom: 9%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    bottom: calc(max(24px, 6vh) + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    z-index: 2;
+  }
+  .enter-btn {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 1.4rem;
     font-weight: 600;
@@ -745,21 +753,12 @@
     cursor: pointer;
     box-shadow: 0 12px 28px rgba(120, 60, 50, 0.32);
     animation: heartbeat 2.4s ease-in-out infinite;
-    transition: transform 0.15s ease;
-    z-index: 2;
   }
-  .enter-btn:hover { transform: translateX(-50%) scale(1.06); }
   .enter-cap {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 4.5%;
-    text-align: center;
     font-style: italic;
     font-size: 1rem;
     color: #a98b6f;
     pointer-events: none;
-    z-index: 2;
   }
   body.locked { overflow: hidden; }
 </style>
@@ -778,8 +777,10 @@
       <div class="pt-main">Happy Birthday</div>
       <div class="pt-sub">Sam</div>
     </div>
-    <button class="enter-btn" id="enterBtn">Enter &#127800;</button>
-    <div class="enter-cap">sealed with a schwimp 🦐</div>
+    <div class="enter-ui">
+      <button class="enter-btn" id="enterBtn">Enter &#127800;</button>
+      <div class="enter-cap">sealed with a schwimp 🦐</div>
+    </div>
   </div>
 
   <!-- ============ HERO ============ -->
@@ -960,8 +961,8 @@
     <div class="ticket">
       <div class="ticket-head">🎟️ OFFICIAL DATE TICKET — NO. 001 🎟️</div>
       <h3>Dinner for two schwimps 🦐🦐</h3>
-      <div class="ticket-row"><span>where</span><strong>The Heist, Kingston</strong></div>
-      <div class="ticket-row"><span>when</span><strong>6:00 PM 🕕</strong></div>
+      <div class="ticket-row"><span>where</span><strong>Joey Rideau</strong></div>
+      <div class="ticket-row"><span>when</span><strong>5:30 PM 🕠</strong></div>
       <div class="ticket-row"><span>with</span><strong>your Johnathan 💕</strong></div>
       <div class="ticket-row"><span>dress code</span><strong>prettiest peony in the garden 🌸</strong></div>
       <div class="ticket-foot">non-refundable · "no" not accepted · valid forever</div>
@@ -1242,9 +1243,6 @@
     const titleEl = document.getElementById('peonyTitle');
     if (!svg) return;
     const NS = 'http://www.w3.org/2000/svg';
-    let seed = 13;
-    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-    const rr = (a, b) => a + (b - a) * rnd();
     const clamp01 = (v) => v < 0 ? 0 : v > 1 ? 1 : v;
     const palettes = [
       ['#ecb7a4', '#dd8f77', '#c56f5e'],
@@ -1259,79 +1257,110 @@
       { count: 6, R: 7, len: 30, wid: 17, delay: 0.14, shade: 2 },
     ];
     const petalPath = (l, w) => `M0 0 C ${w} ${(-l * 0.25).toFixed(1)} ${(w * 0.55).toFixed(1)} ${-l} 0 ${-l} C ${(-w * 0.55).toFixed(1)} ${-l} ${-w} ${(-l * 0.25).toFixed(1)} 0 0 Z`;
-    const flowers = [
-      { x: 220, y: 300, s: 0.85 }, { x: 520, y: 560, s: 1.12 }, { x: 885, y: 250, s: 0.8 },
-      { x: 1235, y: 430, s: 1.02 }, { x: 700, y: 770, s: 0.74 }, { x: 1370, y: 700, s: 0.82 },
-      { x: 120, y: 640, s: 0.76 }, { x: 1030, y: 640, s: 0.62 },
-    ];
-    const petals = [], centers = [], floaters = [];
-    flowers.forEach((f, fi) => {
-      const pal = palettes[fi % palettes.length];
-      const rot = rr(-9, 9);
-      const g = document.createElementNS(NS, 'g');
-      g.setAttribute('transform', `translate(${f.x} ${f.y}) rotate(${rot.toFixed(1)}) scale(${f.s})`);
-      const bloomStart = rr(0, 0.16);
-      const fallStart = 0.44 + fi * 0.028 + rr(0, 0.05);
-      rings.forEach((ring) => {
-        for (let i = 0; i < ring.count; i++) {
-          const ang = (360 / ring.count) * i + (ring.off ? 360 / ring.count / 2 : 0) + rr(-6, 6);
-          const lv = ring.len * rr(0.9, 1.08), wv = ring.wid * rr(0.9, 1.1);
-          const path = document.createElementNS(NS, 'path');
-          path.setAttribute('d', petalPath(lv, wv));
-          path.setAttribute('fill', pal[ring.shade]);
-          path.setAttribute('fill-opacity', '0.22');
-          path.setAttribute('stroke', pal[ring.shade]);
-          path.setAttribute('stroke-width', '2');
-          path.setAttribute('stroke-linejoin', 'round');
-          path.setAttribute('stroke-linecap', 'round');
-          g.appendChild(path);
-          petals.push({
-            el: path, angle: ang, ringR: ring.R,
-            bloomStart: bloomStart + ring.delay, bloomDur: 0.22,
-            fallStart: clamp01(fallStart + ring.delay * 0.5 + rr(0, 0.12)), fallDur: 0.17,
-            fallDist: rr(780, 1180), driftX: rr(-240, 240), spin: rr(80, 260) * (rnd() < 0.5 ? -1 : 1),
-            openTilt: rr(8, 20), swayK: rr(0.6, 1.4), phase: rr(0, 6.28),
-          });
+    // Two compositions of the same 8 peonies: widescreen and portrait (phones).
+    const LAYOUTS = {
+      landscape: {
+        W: 1600, H: 1000,
+        flowers: [
+          { x: 220, y: 300, s: 0.85 }, { x: 520, y: 560, s: 1.12 }, { x: 885, y: 250, s: 0.8 },
+          { x: 1235, y: 430, s: 1.02 }, { x: 700, y: 770, s: 0.74 }, { x: 1370, y: 700, s: 0.82 },
+          { x: 120, y: 640, s: 0.76 }, { x: 1030, y: 640, s: 0.62 },
+        ],
+      },
+      portrait: {
+        W: 1000, H: 1600,
+        flowers: [
+          { x: 280, y: 240, s: 0.9 }, { x: 730, y: 330, s: 0.78 },
+          { x: 500, y: 540, s: 1.1 }, { x: 210, y: 700, s: 0.7 },
+          { x: 800, y: 760, s: 0.92 }, { x: 320, y: 1060, s: 1.0 },
+          { x: 720, y: 1180, s: 0.78 }, { x: 480, y: 1400, s: 0.85 },
+        ],
+      },
+    };
+    let petals = [], centers = [], floaters = [];
+    let mode = null;
+
+    function build() {
+      const nextMode = window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+      if (nextMode === mode) return false;
+      mode = nextMode;
+      const L = LAYOUTS[mode];
+      const fallScale = L.H / 1000;
+      let seed = 13;
+      const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+      const rr = (a, b) => a + (b - a) * rnd();
+      svg.setAttribute('viewBox', `0 0 ${L.W} ${L.H}`);
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      petals = []; centers = []; floaters = [];
+      L.flowers.forEach((f, fi) => {
+        const pal = palettes[fi % palettes.length];
+        const rot = rr(-9, 9);
+        const g = document.createElementNS(NS, 'g');
+        g.setAttribute('transform', `translate(${f.x} ${f.y}) rotate(${rot.toFixed(1)}) scale(${f.s})`);
+        const bloomStart = rr(0, 0.16);
+        const fallStart = 0.44 + fi * 0.028 + rr(0, 0.05);
+        rings.forEach((ring) => {
+          for (let i = 0; i < ring.count; i++) {
+            const ang = (360 / ring.count) * i + (ring.off ? 360 / ring.count / 2 : 0) + rr(-6, 6);
+            const lv = ring.len * rr(0.9, 1.08), wv = ring.wid * rr(0.9, 1.1);
+            const path = document.createElementNS(NS, 'path');
+            path.setAttribute('d', petalPath(lv, wv));
+            path.setAttribute('fill', pal[ring.shade]);
+            path.setAttribute('fill-opacity', '0.22');
+            path.setAttribute('stroke', pal[ring.shade]);
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('stroke-linejoin', 'round');
+            path.setAttribute('stroke-linecap', 'round');
+            g.appendChild(path);
+            petals.push({
+              el: path, angle: ang, ringR: ring.R,
+              bloomStart: bloomStart + ring.delay, bloomDur: 0.22,
+              fallStart: clamp01(fallStart + ring.delay * 0.5 + rr(0, 0.12)), fallDur: 0.17,
+              fallDist: rr(780, 1180) * fallScale, driftX: rr(-240, 240), spin: rr(80, 260) * (rnd() < 0.5 ? -1 : 1),
+              openTilt: rr(8, 20), swayK: rr(0.6, 1.4), phase: rr(0, 6.28),
+            });
+          }
+        });
+        const c = document.createElementNS(NS, 'g');
+        for (let i = 0; i < 12; i++) {
+          const a = (360 / 12) * i;
+          const rad = rr(6, 13);
+          const sx = (Math.sin(a * Math.PI / 180) * rad).toFixed(1);
+          const sy = (-Math.cos(a * Math.PI / 180) * rad).toFixed(1);
+          const ln = document.createElementNS(NS, 'line');
+          ln.setAttribute('x1', '0'); ln.setAttribute('y1', '0');
+          ln.setAttribute('x2', sx); ln.setAttribute('y2', sy);
+          ln.setAttribute('stroke', '#caa04c'); ln.setAttribute('stroke-width', '1.4'); ln.setAttribute('stroke-linecap', 'round');
+          c.appendChild(ln);
+          const dot = document.createElementNS(NS, 'circle');
+          dot.setAttribute('cx', sx); dot.setAttribute('cy', sy);
+          dot.setAttribute('r', '1.8'); dot.setAttribute('fill', '#c79a3f');
+          c.appendChild(dot);
         }
+        g.appendChild(c);
+        centers.push({ el: c, bloomStart, fallStart });
+        svg.appendChild(g);
       });
-      const c = document.createElementNS(NS, 'g');
-      for (let i = 0; i < 12; i++) {
-        const a = (360 / 12) * i;
-        const rad = rr(6, 13);
-        const sx = (Math.sin(a * Math.PI / 180) * rad).toFixed(1);
-        const sy = (-Math.cos(a * Math.PI / 180) * rad).toFixed(1);
-        const ln = document.createElementNS(NS, 'line');
-        ln.setAttribute('x1', '0'); ln.setAttribute('y1', '0');
-        ln.setAttribute('x2', sx); ln.setAttribute('y2', sy);
-        ln.setAttribute('stroke', '#caa04c'); ln.setAttribute('stroke-width', '1.4'); ln.setAttribute('stroke-linecap', 'round');
-        c.appendChild(ln);
-        const dot = document.createElementNS(NS, 'circle');
-        dot.setAttribute('cx', sx); dot.setAttribute('cy', sy);
-        dot.setAttribute('r', '1.8'); dot.setAttribute('fill', '#c79a3f');
-        c.appendChild(dot);
+      const fg = document.createElementNS(NS, 'g');
+      for (let i = 0; i < 11; i++) {
+        const pal = palettes[i % palettes.length];
+        const shade = pal[Math.floor(rr(0, 3))];
+        const lv = rr(26, 44), wv = rr(12, 20);
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', petalPath(lv, wv));
+        path.setAttribute('fill', shade); path.setAttribute('fill-opacity', '0.2');
+        path.setAttribute('stroke', shade); path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-linejoin', 'round'); path.setAttribute('stroke-linecap', 'round');
+        fg.appendChild(path);
+        floaters.push({
+          el: path, x0: rr(-100, L.W + 100), y0: rr(-160, -40), x1: rr(-100, L.W + 100), y1: rr(L.H + 40, L.H + 200),
+          tStart: rr(0, 0.55), tDur: rr(0.4, 0.7), spin: rr(120, 400) * (rnd() < 0.5 ? -1 : 1),
+          sway: rr(30, 90), swayK: rr(1, 2.4), phase: rr(0, 6.28), scale: rr(0.8, 1.3),
+        });
       }
-      g.appendChild(c);
-      centers.push({ el: c, bloomStart, fallStart });
-      svg.appendChild(g);
-    });
-    const fg = document.createElementNS(NS, 'g');
-    for (let i = 0; i < 11; i++) {
-      const pal = palettes[i % palettes.length];
-      const shade = pal[Math.floor(rr(0, 3))];
-      const lv = rr(26, 44), wv = rr(12, 20);
-      const path = document.createElementNS(NS, 'path');
-      path.setAttribute('d', petalPath(lv, wv));
-      path.setAttribute('fill', shade); path.setAttribute('fill-opacity', '0.2');
-      path.setAttribute('stroke', shade); path.setAttribute('stroke-width', '2');
-      path.setAttribute('stroke-linejoin', 'round'); path.setAttribute('stroke-linecap', 'round');
-      fg.appendChild(path);
-      floaters.push({
-        el: path, x0: rr(-100, 1700), y0: rr(-160, -40), x1: rr(-100, 1700), y1: rr(1040, 1200),
-        tStart: rr(0, 0.55), tDur: rr(0.4, 0.7), spin: rr(120, 400) * (rnd() < 0.5 ? -1 : 1),
-        sway: rr(30, 90), swayK: rr(1, 2.4), phase: rr(0, 6.28), scale: rr(0.8, 1.3),
-      });
+      svg.appendChild(fg);
+      return true;
     }
-    svg.appendChild(fg);
 
     const eout = (v) => 1 - Math.pow(1 - v, 3);
     const ein = (v) => v * v;
@@ -1372,20 +1401,32 @@
       }
     }
 
+    let t = 0;
+    build();
     update(0);
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { update(0.4); return; }
-    const BASE = 15000, speed = 1;
-    let t = 0, last = null, raf;
+    if (reduce) {
+      t = 0.4;
+      update(t);
+      window.addEventListener('resize', () => { if (build()) update(t); });
+      return;
+    }
+    const BASE = 15000;
+    let last = null, raf;
     const loop = (now) => {
       if (last == null) last = now;
       const dt = now - last; last = now;
-      t += dt / (BASE / speed);
+      t += dt / BASE;
       if (t >= 1) t -= 1;
       update(t);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => { if (build()) update(t); }, 250);
+    });
     window.__stopPeonies = () => cancelAnimationFrame(raf);
   })();
 
