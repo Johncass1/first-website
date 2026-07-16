@@ -15,7 +15,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%90%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -383,55 +383,268 @@
     #yesOverlay .big-shrimp { font-size: 3rem; margin-bottom: 6px; }
     #yesOverlay h2 { font-size: 2rem; margin-bottom: 10px; }
     #yesOverlay p { font-size: 1.05rem; }
-    #yesOverlay .ticket { margin-top: 18px; padding: 18px 24px; }
-    #yesOverlay .ticket-row { padding: 7px 0; }
   }
 
-  /* ---------- date ticket ---------- */
-  .ticket {
-    background: #fff;
-    border: 3px dashed var(--pink-deep);
-    border-radius: 18px;
-    padding: 24px 28px;
-    margin-top: 26px;
-    max-width: 440px;
-    width: 100%;
-    text-align: left;
-    box-shadow: 0 12px 32px rgba(194, 24, 91, 0.3);
-    animation: bloom 0.8s ease-out both;
-  }
-  .ticket-head {
-    font-size: 0.78rem;
-    letter-spacing: 2px;
-    color: var(--pink-deep);
-    margin-bottom: 10px;
-    text-align: center;
-  }
-  .ticket h3 {
-    font-size: 1.35rem;
-    margin-bottom: 14px;
-    color: var(--pink-dark);
-    text-align: center;
-  }
-  .ticket-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 14px;
-    padding: 9px 0;
-    border-bottom: 1px dotted var(--pink);
-    font-size: 1rem;
-    color: var(--pink-dark);
-  }
-  .ticket-row span { font-style: italic; color: var(--pink-deep); white-space: nowrap; }
-  .ticket-row strong { text-align: right; }
-  .ticket-foot {
-    margin-top: 14px;
-    font-size: 0.8rem;
-    font-style: italic;
-    color: var(--pink-deep);
-    text-align: center;
-  }
+/* ================================================================
+   tk- : ticket-keepsake — printed date ticket for #yesOverlay
+   (matches the enter-screen's language: paper #f4ecdd + grain,
+    terracotta #ecb7a4/#dd8f77/#c56f5e, gold #caa04c, ink #b3615a,
+    taupe #a98b6f, berry #8a3b5c, Cormorant Garamond)
+   ================================================================ */
+
+/* ---------- wrap: shadow + entrance transform live here so the
+   perforation mask (on .tk-ticket) doesn't clip the shadow ---------- */
+.tk-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 26px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  text-align: left;
+  filter: drop-shadow(0 2px 4px rgba(138, 59, 92, 0.14))
+          drop-shadow(0 16px 30px rgba(138, 59, 92, 0.22));
+  transform: rotate(-1.5deg); /* settled resting tilt */
+}
+
+/* ---------- paper ---------- */
+.tk-ticket {
+  --tk-stubw: 52px;
+  position: relative;
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 28% 0%, rgba(255, 253, 246, 0.85) 0%, rgba(255, 253, 246, 0) 55%),
+    linear-gradient(165deg, #f7f0e2 0%, #f4ecdd 48%, #eee3cc 100%);
+  /* punched perforation: a column of round holes along the stub edge */
+  -webkit-mask-image: radial-gradient(circle at var(--tk-stubw) 8px, transparent 3px, #000 3.6px);
+  -webkit-mask-size: 100% 16px;
+  -webkit-mask-repeat: repeat;
+  mask-image: radial-gradient(circle at var(--tk-stubw) 8px, transparent 3px, #000 3.6px);
+  mask-size: 100% 16px;
+  mask-repeat: repeat;
+}
+.tk-grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* ---------- tear-off stub ---------- */
+.tk-stub {
+  flex: 0 0 var(--tk-stubw, 52px);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, rgba(221, 143, 119, 0.13), rgba(221, 143, 119, 0.04));
+}
+.tk-stub-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  color: #a98b6f;
+  white-space: nowrap;
+}
+.tk-stub-text::before,
+.tk-stub-text::after {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 16px;
+  margin: 10px auto;
+  background: rgba(169, 139, 111, 0.55);
+}
+
+/* ---------- main body ---------- */
+.tk-body {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding: 17px 16px 14px 18px;
+}
+.tk-eyebrow {
+  position: relative;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em; /* optically re-center tracked text */
+  color: #caa04c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); /* letterpress */
+}
+.tk-serial {
+  display: block;
+  width: max-content;
+  margin: 7px auto 0;
+  padding: 2px 9px 1px;
+  border: 1px solid rgba(179, 97, 90, 0.5);
+  border-radius: 3px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  padding-left: calc(9px + 0.24em);
+  text-transform: uppercase;
+  color: rgba(179, 97, 90, 0.82); /* stamped, slightly starved ink */
+  transform: rotate(-2.4deg);
+}
+.tk-title {
+  position: relative;
+  margin: 9px 0 4px;
+  text-align: center;
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.35rem, 6vw, 1.55rem);
+  line-height: 1.12;
+  color: #8a3b5c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- rows ---------- */
+.tk-rows { position: relative; margin-top: 7px; }
+.tk-row {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(221, 143, 119, 0.5); /* thin terracotta rule */
+}
+.tk-row:first-child { border-top: 1px solid rgba(221, 143, 119, 0.5); }
+.tk-label {
+  font-variant-caps: small-caps;
+  text-transform: lowercase;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  color: #a98b6f;
+  white-space: nowrap;
+}
+.tk-value {
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #b3615a;
+  text-align: right;
+}
+.tk-foot {
+  margin-top: 11px;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;
+  color: #a98b6f;
+}
+
+/* ---------- decorations ---------- */
+.tk-sprig {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  width: 54px;
+  height: auto;
+  pointer-events: none;
+}
+.tk-shrimp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  max-width: 220px;
+  height: auto;
+  transform: translate(-50%, -50%) rotate(-7deg);
+  opacity: 0.07; /* watermark */
+  pointer-events: none;
+}
+
+/* ---------- wax stamp (settled state: visible) ----------
+   lands across the stub corner + perforation, like a real
+   validation seal — covers no text */
+.tk-stamp {
+  position: absolute;
+  left: -12px;
+  top: -14px;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-12deg);
+  background: radial-gradient(circle at 34% 28%, #d68472 0%, #c56f5e 48%, #af5a4a 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.28),
+    inset 0 -4px 7px rgba(122, 48, 38, 0.35),
+    0 3px 9px rgba(138, 59, 92, 0.3);
+}
+.tk-stamp::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 248, 240, 0.7);
+}
+.tk-stamp-text {
+  text-transform: uppercase;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  padding-left: 0.22em;
+  color: #fff6ec;
+  text-shadow: 0 1px 2px rgba(122, 48, 38, 0.4);
+}
+
+/* ---------- play choreography (JS adds .tk-play) ----------
+   0-600ms   ticket slides up 24px, settles into its -1.5deg tilt
+   +800ms    wax stamp thunks on (1.6 -> 1 with a tiny shake)
+   ~950ms    the paper flinches under the impact */
+.tk-play {
+  animation:
+    tk-enter 0.6s cubic-bezier(0.22, 0.85, 0.32, 1.04) both,
+    tk-thunk 0.3s ease-in-out 0.95s;
+}
+@keyframes tk-enter {
+  0%   { opacity: 0; transform: translateY(24px) rotate(0.8deg); }
+  72%  { opacity: 1; transform: translateY(-3px) rotate(-1.9deg); }
+  100% { opacity: 1; transform: translateY(0) rotate(-1.5deg); }
+}
+@keyframes tk-thunk {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  35%      { transform: translateY(2px) rotate(-1.1deg); }
+  70%      { transform: translateY(-1px) rotate(-1.7deg); }
+}
+.tk-play .tk-stamp {
+  animation: tk-stamp-in 0.5s cubic-bezier(0.25, 0.85, 0.35, 1) 0.8s both;
+}
+@keyframes tk-stamp-in {
+  0%   { opacity: 0; transform: rotate(-20deg) scale(1.6); }
+  45%  { opacity: 1; transform: rotate(-11deg) scale(0.92); }
+  62%  { opacity: 1; transform: translate(1.5px, -1px) rotate(-13.5deg) scale(1.04); }
+  78%  { opacity: 1; transform: translate(-1px, 1px) rotate(-11.5deg) scale(0.985); }
+  100% { opacity: 1; transform: rotate(-12deg) scale(1); }
+}
+
+/* ---------- reduced motion: settled instantly ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .tk-play,
+  .tk-play .tk-stamp { animation: none !important; }
+}
+
+/* ---------- short phones (mirrors the site's compact overlay) ---------- */
+@media (max-height: 820px) {
+  .tk-wrap { margin-top: 18px; }
+  .tk-body { padding: 14px 14px 12px 16px; }
+  .tk-row { padding: 6px 0; }
+}
 
   /* ---------- easter egg ---------- */
   #eggTrigger { cursor: pointer; display: inline-block; }
@@ -1439,15 +1652,64 @@
     <h2>IT'S A DATE!!!</h2>
     <p>The bumbles are buzzing 🐝, the rats are squeaking 🐀,
        and the schwimps are doing little backflips 🦐</p>
-    <div class="ticket">
-      <div class="ticket-head">🎟️ OFFICIAL DATE TICKET — NO. 001 🎟️</div>
-      <h3>Dinner for two schwimps 🦐🦐</h3>
-      <div class="ticket-row"><span>where</span><strong>Joey Rideau</strong></div>
-      <div class="ticket-row"><span>when</span><strong>5:30 PM 🕠</strong></div>
-      <div class="ticket-row"><span>with</span><strong>your Johnathan 💕</strong></div>
-      <div class="ticket-row"><span>dress code</span><strong>prettiest peony in the garden 🌸</strong></div>
-      <div class="ticket-foot">non-refundable · "no" not accepted · valid forever</div>
+<!-- ==================== tk- ticket-keepsake ==================== -->
+<div class="tk-wrap" id="tkWrap">
+  <div class="tk-ticket">
+    <svg class="tk-grain" aria-hidden="true" focusable="false">
+      <filter id="tk-grainF"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+      <rect width="100%" height="100%" filter="url(#tk-grainF)"></rect>
+    </svg>
+    <div class="tk-stub" aria-hidden="true"><span class="tk-stub-text">Admit Two</span></div>
+    <div class="tk-body">
+      <svg class="tk-sprig" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M80 42 C 74 62 60 78 40 92" stroke="#a98b6f" stroke-width="2"/>
+          <path d="M0 0 C 9 -4.5 5 -18 0 -18 C -5 -18 -9 -4.5 0 0 Z" transform="translate(56,76) rotate(118)" stroke="#a98b6f" stroke-width="2" fill="#a98b6f" fill-opacity="0.18"/>
+          <g stroke="#dd8f77" stroke-width="2" fill="#dd8f77" fill-opacity="0.22">
+            <path d="M0 0 C 12 -6 6.6 -24 0 -24 C -6.6 -24 -12 -6 0 0 Z" transform="translate(80,40) rotate(-70)"/>
+            <path d="M0 0 C 12 -6 6.6 -24 0 -24 C -6.6 -24 -12 -6 0 0 Z" transform="translate(80,40) rotate(-35)"/>
+            <path d="M0 0 C 12 -6 6.6 -24 0 -24 C -6.6 -24 -12 -6 0 0 Z" transform="translate(80,40)"/>
+            <path d="M0 0 C 12 -6 6.6 -24 0 -24 C -6.6 -24 -12 -6 0 0 Z" transform="translate(80,40) rotate(35)"/>
+            <path d="M0 0 C 12 -6 6.6 -24 0 -24 C -6.6 -24 -12 -6 0 0 Z" transform="translate(80,40) rotate(70)"/>
+          </g>
+          <circle cx="80" cy="37" r="3.4" stroke="#caa04c" stroke-width="1.6" fill="#caa04c" fill-opacity="0.3"/>
+          <circle cx="40" cy="92" r="3.6" stroke="#ecb7a4" stroke-width="1.8" fill="#ecb7a4" fill-opacity="0.25"/>
+        </g>
+      </svg>
+      <div class="tk-eyebrow">Official Date Ticket</div>
+      <span class="tk-serial">No. 001</span>
+      <h3 class="tk-title">Dinner for two schwimps</h3>
+      <div class="tk-rows">
+        <svg class="tk-shrimp" viewBox="0 0 240 170" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="#8a3b5c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M36 84 C 60 30 160 16 200 66 C 212 82 214 100 208 116"/>
+            <path d="M92 30 C 88 50 90 72 98 88"/>
+            <path d="M134 24 C 130 46 134 68 142 84"/>
+            <path d="M172 34 C 168 52 172 72 182 88"/>
+            <g stroke-width="4">
+              <path d="M0 0 C 12 -6 6.5 -28 0 -28 C -6.5 -28 -12 -6 0 0 Z" transform="translate(206,112) rotate(103)"/>
+              <path d="M0 0 C 12 -6 6.5 -28 0 -28 C -6.5 -28 -12 -6 0 0 Z" transform="translate(206,112) rotate(152)"/>
+            </g>
+            <path d="M44 60 C 36 54 28 52 20 52"/>
+            <path d="M48 52 C 30 36 14 32 4 36"/>
+            <path d="M46 70 C 30 80 20 94 16 110"/>
+            <path d="M74 90 C 71 100 66 108 58 112"/>
+            <path d="M98 98 C 96 108 92 116 85 121"/>
+            <path d="M122 100 C 121 110 118 118 112 124"/>
+            <circle cx="58" cy="58" r="4" fill="#8a3b5c" stroke="none"/>
+          </g>
+        </svg>
+        <div class="tk-row"><span class="tk-label">where</span><strong class="tk-value">Joey Rideau</strong></div>
+        <div class="tk-row"><span class="tk-label">when</span><strong class="tk-value">5:30 PM</strong></div>
+        <div class="tk-row"><span class="tk-label">with</span><strong class="tk-value">your Johnathan 💕</strong></div>
+        <div class="tk-row"><span class="tk-label">dress code</span><strong class="tk-value">prettiest peony in the&nbsp;garden&nbsp;🌸</strong></div>
+      </div>
+      <div class="tk-foot">non-refundable &middot; &ldquo;no&rdquo; not accepted &middot; valid forever</div>
     </div>
+  </div>
+  <div class="tk-stamp"><span class="tk-stamp-text">Accepted</span></div>
+</div>
+<!-- ================== /tk- ticket-keepsake ==================== -->
     </div>
   </div>
 
@@ -1841,8 +2103,35 @@
   });
 
   // ---------- yes! ----------
+/* ==================== tk- ticket-keepsake API ====================
+   window.TicketKeepsake.play()
+   - Call when #yesOverlay opens: runs the entrance slide (600ms)
+     then the wax-stamp thunk (+800ms).
+   - Idempotent: calling play() again restarts the choreography
+     cleanly from the beginning (class is removed, reflow forced,
+     class re-added).
+   - prefers-reduced-motion: play() is a no-op; the ticket's base
+     CSS state is already fully settled and visible.
+   ================================================================ */
+(function () {
+  'use strict';
+  function play() {
+    var wrap = document.getElementById('tkWrap');
+    if (!wrap) return;
+    wrap.classList.remove('tk-play');
+    /* force reflow so re-adding the class restarts the animations */
+    void wrap.offsetWidth;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return; /* settled state is already visible */
+    }
+    wrap.classList.add('tk-play');
+  }
+  window.TicketKeepsake = { play: play };
+})();
+
   function sayYes() {
     document.getElementById('yesOverlay').classList.add('show');
+    TicketKeepsake.play();
     PetalWeather.burst({ count: 44, palette: 'candy', critters: 10 });
   }
   yesBtn.addEventListener('click', sayYes);
