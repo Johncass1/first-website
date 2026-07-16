@@ -37,22 +37,18 @@
     min-height: 100vh;
   }
 
-  /* ---------- falling petals ---------- */
-  .petal {
-    position: fixed;
-    top: -10vh;
-    font-size: 22px;
-    pointer-events: none;
-    z-index: 5;
-    animation: fall linear infinite;
-  }
-  @keyframes fall {
-    0%   { transform: translateY(-10vh) translateX(0) rotate(0deg); }
-    25%  { transform: translateY(25vh) translateX(40px) rotate(90deg); }
-    50%  { transform: translateY(50vh) translateX(-30px) rotate(180deg); }
-    75%  { transform: translateY(75vh) translateX(40px) rotate(270deg); }
-    100% { transform: translateY(110vh) translateX(0) rotate(360deg); }
-  }
+/* ========== petal-weather (pw-) : drawn-petal ambient fall + celebration bursts ========== */
+.pw-layer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+.pw-layer-ambient { z-index: 5; transition: opacity 1.4s ease; }
+.pw-layer-burst   { z-index: 120; }
 
   /* ---------- floating critters ---------- */
   .critter {
@@ -203,14 +199,6 @@
     box-shadow: 0 12px 40px rgba(240, 98, 146, 0.25);
     position: relative;
     transform: rotate(-1deg);
-  }
-  .letter::before {
-    content: '🦐';
-    position: absolute;
-    top: -22px;
-    right: 28px;
-    font-size: 2.2rem;
-    transform: rotate(15deg);
   }
   .letter p {
     font-style: italic;
@@ -518,17 +506,6 @@
   }
   #yesOverlay .modal-close { position: fixed; top: 14px; right: 18px; z-index: 102; }
 
-  .confetti {
-    position: fixed;
-    top: -5vh;
-    font-size: 28px;
-    pointer-events: none;
-    z-index: 101;
-    animation: confettiFall linear forwards;
-  }
-  @keyframes confettiFall {
-    to { transform: translateY(115vh) rotate(720deg); }
-  }
 
   /* ---------- song player ---------- */
   .song-btn {
@@ -662,7 +639,6 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
-    .petal, .confetti { display: none !important; }
   }
 
   footer {
@@ -761,6 +737,154 @@
     pointer-events: none;
   }
   body.locked { overflow: hidden; }
+/* ================================================================
+   shl- : section heading lockups + letter stationery
+   (matches the enter-screen's stroked-petal language:
+    paper #f4ecdd, terracotta palettes, gold #caa04c,
+    ink #b3615a, taupe #a98b6f, berry #8a3b5c)
+   ================================================================ */
+
+/* ---------- (a) heading lockup ---------- */
+.shl-lockup {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 30px;
+  position: relative;
+  z-index: 11;
+}
+.shl-eyebrow {
+  font-size: clamp(0.68rem, 1.9vw, 0.8rem);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  padding-left: 0.32em; /* optically re-center tracked text */
+  text-transform: uppercase;
+  color: #a98b6f;
+}
+.shl-title {
+  margin: 10px auto 0;
+  font-weight: 500;
+  font-style: italic;
+  font-size: clamp(1.9rem, 6.4vw, 3.3rem);
+  line-height: 1.08;
+  color: #8a3b5c;
+  max-width: 28ch;
+  text-wrap: balance;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.shl-flourish {
+  display: block;
+  width: clamp(195px, 48vw, 240px);
+  height: auto;
+  margin: 10px auto 0;
+  overflow: visible;
+}
+.shl-sub {
+  margin-top: 6px;
+  font-style: italic;
+  font-size: clamp(0.98rem, 2.7vw, 1.15rem);
+  color: #b3615a;
+}
+
+/* ---------- lockup entrance (JS adds .shl-anim, then .shl-in) ---------- */
+.shl-anim .shl-eyebrow,
+.shl-anim .shl-title,
+.shl-anim .shl-sub {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.85s ease, transform 0.85s cubic-bezier(0.22, 0.8, 0.32, 1);
+}
+.shl-anim .shl-title { transition-delay: 0.12s; }
+.shl-anim .shl-sub   { transition-delay: 1.05s; }
+.shl-in .shl-eyebrow,
+.shl-in .shl-title,
+.shl-in .shl-sub { opacity: 1; transform: none; }
+
+/* flourish strokes draw on (elements carry pathLength="1" + --shl-d delay) */
+.shl-anim .shl-fd {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  fill-opacity: 0;
+  transition:
+    stroke-dashoffset 0.95s cubic-bezier(0.45, 0.05, 0.35, 1) var(--shl-d, 0s),
+    fill-opacity 0.7s ease calc(var(--shl-d, 0s) + 0.4s);
+}
+.shl-in .shl-fd { stroke-dashoffset: 0; fill-opacity: 0.22; }
+.shl-anim .shl-ff { opacity: 0; transition: opacity 0.65s ease var(--shl-d, 0s); }
+.shl-in .shl-ff { opacity: 1; }
+
+/* the little bee keeps hovering once drawn */
+@media (prefers-reduced-motion: no-preference) {
+  .shl-lockup.shl-in .shl-f-beein {
+    animation: shl-beebob 2.4s ease-in-out 2s infinite alternate;
+  }
+}
+@keyframes shl-beebob {
+  from { transform: translate(0, 0) rotate(0deg); }
+  to   { transform: translate(-1.5px, -2.5px) rotate(5deg); }
+}
+
+/* static fallback: no JS / reduced motion => everything simply visible */
+@media (prefers-reduced-motion: reduce) {
+  .shl-anim .shl-eyebrow, .shl-anim .shl-title, .shl-anim .shl-sub,
+  .shl-anim .shl-fd, .shl-anim .shl-ff {
+    transition: none;
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0;
+    fill-opacity: 0.22;
+  }
+  .shl-anim .shl-eyebrow, .shl-anim .shl-title, .shl-anim .shl-sub { fill-opacity: initial; }
+}
+
+/* ---------- (b) letter stationery upgrade (overrides existing .letter) ---------- */
+.letter {
+  background: #fdf7ec;
+  border: 1px solid #d9b9a4;
+  outline: 1px solid #d9b9a4;
+  outline-offset: -7px;
+  border-radius: 6px;
+  box-shadow:
+    0 14px 40px rgba(171, 98, 76, 0.22),
+    0 3px 10px rgba(171, 98, 76, 0.12);
+}
+/* the 🦐 emoji ::before is replaced by the inline wax-seal SVG */
+.letter::before { content: none; }
+
+.shl-letter-grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.shl-seal {
+  position: absolute;
+  top: -26px;
+  right: 20px;
+  width: 64px;
+  height: 64px;
+  transform: rotate(9deg);
+  filter: drop-shadow(0 5px 10px rgba(140, 58, 44, 0.35));
+  pointer-events: none;
+}
+
+/* optional Cormorant italic body for the letter */
+.shl-letter-serif p {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.18rem, 3.3vw, 1.42rem);
+  line-height: 1.7;
+  color: #7f4152;
+}
+.shl-letter-serif .signature {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(1.35rem, 3.6vw, 1.7rem);
+  color: #b3615a;
+}
 </style>
 </head>
 <body>
@@ -825,7 +949,80 @@
 
   <!-- ============ LETTER ============ -->
   <section>
-    <div class="letter">
+<!-- lockup: letter section -->
+<header class="shl-lockup">
+      <p class="shl-eyebrow">No. 01 &mdash; A Letter for You</p>
+      <h2 class="shl-title">My dearest schwimp</h2>
+      <svg class="shl-flourish" viewBox="0 0 240 44" aria-hidden="true">
+        <path class="shl-fd" style="--shl-d:.15s" pathLength="1" d="M14 26 C 44 33 78 31 105 25.5" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.3s" pathLength="1" d="M135 25.5 C 162 30.5 186 28.5 205 21" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.55s" pathLength="1" transform="translate(62 30.8) rotate(4)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.68s" pathLength="1" transform="translate(170 27.9) rotate(192)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <g transform="translate(120 22.5)">
+          <path class="shl-fd" style="--shl-d:.5s" pathLength="1" transform="rotate(-6) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.58s" pathLength="1" transform="rotate(66) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.66s" pathLength="1" transform="rotate(140) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.74s" pathLength="1" transform="rotate(214) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.82s" pathLength="1" transform="rotate(286) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="shl-ff" style="--shl-d:1s">
+            <line x1="0" y1="0" x2="2.9" y2="-3.9" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="-4" y2="-2.1" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="1.1" y2="4.2" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="2.9" cy="-3.9" r="1.7" fill="#c79a3f"/>
+            <circle cx="-4" cy="-2.1" r="1.7" fill="#c79a3f"/>
+            <circle cx="1.1" cy="4.2" r="1.7" fill="#c79a3f"/>
+          </g>
+        </g>
+        <path class="shl-ff" style="--shl-d:1.15s" d="M204.5 22.5 C 210 26.5 216 23.5 213.5 17" fill="none" stroke="#caa04c" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.01 4"/>
+        <g transform="translate(217 10.5) rotate(-14)">
+          <g class="shl-f-beein">
+            <path class="shl-fd" style="--shl-d:1s" pathLength="1" d="M-4.6 0 A 4.6 3.4 0 1 1 4.6 0 A 4.6 3.4 0 1 1 -4.6 0 Z" fill="#caa04c" fill-opacity=".22" stroke="#caa04c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.2s" pathLength="1" d="M-1 -3.1 L -1.7 3.1" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.26s" pathLength="1" d="M1.9 -2.9 L 1.3 3" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.32s" pathLength="1" d="M-2.6 -3.3 C -4.8 -8.3 -0.4 -9.3 0.3 -4.3" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.38s" pathLength="1" d="M1.4 -3.6 C 1.8 -7.8 5.2 -6.9 3.9 -2.9" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+    </header>
+    <div class="letter shl-letter-serif">
+<svg class="shl-letter-grain" aria-hidden="true">
+    <filter id="shl-grainF"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+    <rect width="100%" height="100%" filter="url(#shl-grainF)"></rect>
+  </svg>
+
+<!-- wax seal, replaces the old .letter::before 🦐 emoji -->
+<svg class="shl-seal" viewBox="0 0 64 64" role="img" aria-label="rose wax seal stamped with a little shrimp">
+    <defs>
+      <radialGradient id="shl-sealGrad" cx="42%" cy="36%" r="72%">
+        <stop offset="0%" stop-color="#d8907e"/>
+        <stop offset="55%" stop-color="#c56f5e"/>
+        <stop offset="100%" stop-color="#ad574a"/>
+      </radialGradient>
+    </defs>
+    <circle cx="9.8" cy="45.2" r="4" fill="#b45c4d"/>
+    <circle cx="54.6" cy="18.6" r="3.2" fill="#b45c4d"/>
+    <path fill="url(#shl-sealGrad)" d="M32 5.8 C 38.6 4.8 46.4 7.6 51.2 12.6 C 55.9 17.5 58.6 24.2 57.9 31 C 57.2 37.4 54.4 44 49.6 48.6 C 44.8 53.2 37.8 56.6 31 56 C 24.4 55.4 17.4 52 12.8 46.7 C 8.4 41.6 6 34.6 6.7 27.9 C 7.4 21.3 11.2 14.7 16.8 10.5 C 21.4 7.1 26.6 6.6 32 5.8 Z"/>
+    <circle cx="32" cy="31.4" r="21" fill="rgba(94,32,25,0.05)" stroke="rgba(94,32,25,0.28)" stroke-width="1.2"/>
+    <circle cx="32.7" cy="32.2" r="21" fill="none" stroke="rgba(255,224,206,0.32)" stroke-width="1.1"/>
+    <g fill="none" stroke="#f2cfbd" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke-width="4.6" d="M40.5 23.5 C 34.5 17.5 25 18.5 21 25 C 17.5 30.5 19.5 37.5 25.5 40.5"/>
+      <path stroke-width="1.4" d="M40.5 23.5 C 42.6 24.5 44.2 26.3 45 28.4"/>
+      <path stroke-width="1.3" d="M41.6 25.6 C 43.4 29 43.4 32.8 41.8 36.4"/>
+      <path stroke-width="1.3" d="M40.2 26.4 C 41.5 29.6 41.2 33.2 39.5 36.2"/>
+      <path stroke-width="1.6" d="M25.5 40.5 C 27.9 42 29.6 44.2 30.5 46.8"/>
+      <path stroke-width="1.6" d="M25.5 40.5 C 26.5 42.9 26.6 45.6 25.9 48"/>
+      <path stroke-width="1.6" d="M25.5 40.5 C 24 42.5 21.8 44 19.3 44.8"/>
+    </g>
+    <g fill="none" stroke="#aa5240" stroke-linecap="round">
+      <path stroke-width="1.7" d="M31.4 16.8 L 31.2 21.8"/>
+      <path stroke-width="1.7" d="M23.6 20.2 C 24.7 21.5 25.8 22.6 27.3 23.4"/>
+      <path stroke-width="1.7" d="M17.5 29.3 L 22.5 29.6"/>
+    </g>
+    <circle cx="39" cy="22.7" r="1.15" fill="#8a4237"/>
+    <path d="M18.5 15.2 C 21.8 12.4 25.8 10.6 30 10.2" fill="none" stroke="rgba(255,238,228,0.3)" stroke-width="2.6" stroke-linecap="round"/>
+  </svg>
+
       <p>Sam, I wanted to wish a Happy Birthday to my favourite person
          in the whole world! This is one of many gifts that I want to
          give you on your special day.</p>
@@ -837,8 +1034,43 @@
 
   <!-- ============ BIRTHDAY CAKE ============ -->
   <section>
-    <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">Your cake, schwimp 🎂</h2>
-    <p style="font-style: italic; color: var(--pink-deep); margin-top: 10px;">(tap the candles to blow them out)</p>
+<!-- lockup: cake section -->
+<header class="shl-lockup">
+      <p class="shl-eyebrow">No. 02 &mdash; Make a Wish</p>
+      <h2 class="shl-title">Your cake, schwimp</h2>
+      <svg class="shl-flourish" viewBox="0 0 240 44" aria-hidden="true">
+        <path class="shl-fd" style="--shl-d:.15s" pathLength="1" d="M14 26 C 44 33 78 31 105 25.5" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.3s" pathLength="1" d="M135 25.5 C 162 30.5 186 28.5 205 21" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.55s" pathLength="1" transform="translate(62 30.8) rotate(4)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.68s" pathLength="1" transform="translate(170 27.9) rotate(192)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <g transform="translate(120 22.5)">
+          <path class="shl-fd" style="--shl-d:.5s" pathLength="1" transform="rotate(-6) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.58s" pathLength="1" transform="rotate(66) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.66s" pathLength="1" transform="rotate(140) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.74s" pathLength="1" transform="rotate(214) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.82s" pathLength="1" transform="rotate(286) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="shl-ff" style="--shl-d:1s">
+            <line x1="0" y1="0" x2="2.9" y2="-3.9" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="-4" y2="-2.1" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="1.1" y2="4.2" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="2.9" cy="-3.9" r="1.7" fill="#c79a3f"/>
+            <circle cx="-4" cy="-2.1" r="1.7" fill="#c79a3f"/>
+            <circle cx="1.1" cy="4.2" r="1.7" fill="#c79a3f"/>
+          </g>
+        </g>
+        <path class="shl-ff" style="--shl-d:1.15s" d="M204.5 22.5 C 210 26.5 216 23.5 213.5 17" fill="none" stroke="#caa04c" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.01 4"/>
+        <g transform="translate(217 10.5) rotate(-14)">
+          <g class="shl-f-beein">
+            <path class="shl-fd" style="--shl-d:1s" pathLength="1" d="M-4.6 0 A 4.6 3.4 0 1 1 4.6 0 A 4.6 3.4 0 1 1 -4.6 0 Z" fill="#caa04c" fill-opacity=".22" stroke="#caa04c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.2s" pathLength="1" d="M-1 -3.1 L -1.7 3.1" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.26s" pathLength="1" d="M1.9 -2.9 L 1.3 3" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.32s" pathLength="1" d="M-2.6 -3.3 C -4.8 -8.3 -0.4 -9.3 0.3 -4.3" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.38s" pathLength="1" d="M1.4 -3.6 C 1.8 -7.8 5.2 -6.9 3.9 -2.9" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+      <p class="shl-sub">(tap the candles to blow them out)</p>
+    </header>
     <div class="cake-wrap">
       <div class="candles">
         <div class="candle"><div class="flame"></div></div>
@@ -859,7 +1091,42 @@
 
   <!-- ============ PHOTO GALLERY ============ -->
   <section>
-    <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">The Schwimp Archives 📸</h2>
+<!-- lockup: gallery section -->
+<header class="shl-lockup">
+      <p class="shl-eyebrow">No. 03 &mdash; The Schwimp Archives</p>
+      <h2 class="shl-title">Photographic evidence of us</h2>
+      <svg class="shl-flourish" viewBox="0 0 240 44" aria-hidden="true">
+        <path class="shl-fd" style="--shl-d:.15s" pathLength="1" d="M14 26 C 44 33 78 31 105 25.5" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.3s" pathLength="1" d="M135 25.5 C 162 30.5 186 28.5 205 21" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.55s" pathLength="1" transform="translate(62 30.8) rotate(4)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.68s" pathLength="1" transform="translate(170 27.9) rotate(192)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <g transform="translate(120 22.5)">
+          <path class="shl-fd" style="--shl-d:.5s" pathLength="1" transform="rotate(-6) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.58s" pathLength="1" transform="rotate(66) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.66s" pathLength="1" transform="rotate(140) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.74s" pathLength="1" transform="rotate(214) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.82s" pathLength="1" transform="rotate(286) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="shl-ff" style="--shl-d:1s">
+            <line x1="0" y1="0" x2="2.9" y2="-3.9" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="-4" y2="-2.1" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="1.1" y2="4.2" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="2.9" cy="-3.9" r="1.7" fill="#c79a3f"/>
+            <circle cx="-4" cy="-2.1" r="1.7" fill="#c79a3f"/>
+            <circle cx="1.1" cy="4.2" r="1.7" fill="#c79a3f"/>
+          </g>
+        </g>
+        <path class="shl-ff" style="--shl-d:1.15s" d="M204.5 22.5 C 210 26.5 216 23.5 213.5 17" fill="none" stroke="#caa04c" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.01 4"/>
+        <g transform="translate(217 10.5) rotate(-14)">
+          <g class="shl-f-beein">
+            <path class="shl-fd" style="--shl-d:1s" pathLength="1" d="M-4.6 0 A 4.6 3.4 0 1 1 4.6 0 A 4.6 3.4 0 1 1 -4.6 0 Z" fill="#caa04c" fill-opacity=".22" stroke="#caa04c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.2s" pathLength="1" d="M-1 -3.1 L -1.7 3.1" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.26s" pathLength="1" d="M1.9 -2.9 L 1.3 3" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.32s" pathLength="1" d="M-2.6 -3.3 C -4.8 -8.3 -0.4 -9.3 0.3 -4.3" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.38s" pathLength="1" d="M1.4 -3.6 C 1.8 -7.8 5.2 -6.9 3.9 -2.9" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+    </header>
     <div class="gallery">
       <figure class="polaroid">
         <img loading="lazy" decoding="async" src="photos/photo1.jpg" alt="Sam smiling in a sunny garden">
@@ -882,8 +1149,43 @@
 
   <!-- ============ REASONS ============ -->
   <section>
-    <h2 style="font-size: clamp(1.6rem, 5vw, 2.6rem);">8 reasons you're my favourite schwimp 🦐</h2>
-    <p style="font-style: italic; color: var(--pink-deep); margin-top: 10px;">(tap a card, schwimpy)</p>
+<!-- lockup: reasons section -->
+<header class="shl-lockup">
+      <p class="shl-eyebrow">No. 04 &mdash; Eight Reasons</p>
+      <h2 class="shl-title">Why you&rsquo;re my favourite schwimp</h2>
+      <svg class="shl-flourish" viewBox="0 0 240 44" aria-hidden="true">
+        <path class="shl-fd" style="--shl-d:.15s" pathLength="1" d="M14 26 C 44 33 78 31 105 25.5" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.3s" pathLength="1" d="M135 25.5 C 162 30.5 186 28.5 205 21" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.55s" pathLength="1" transform="translate(62 30.8) rotate(4)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.68s" pathLength="1" transform="translate(170 27.9) rotate(192)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <g transform="translate(120 22.5)">
+          <path class="shl-fd" style="--shl-d:.5s" pathLength="1" transform="rotate(-6) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.58s" pathLength="1" transform="rotate(66) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.66s" pathLength="1" transform="rotate(140) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.74s" pathLength="1" transform="rotate(214) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.82s" pathLength="1" transform="rotate(286) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="shl-ff" style="--shl-d:1s">
+            <line x1="0" y1="0" x2="2.9" y2="-3.9" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="-4" y2="-2.1" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="1.1" y2="4.2" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="2.9" cy="-3.9" r="1.7" fill="#c79a3f"/>
+            <circle cx="-4" cy="-2.1" r="1.7" fill="#c79a3f"/>
+            <circle cx="1.1" cy="4.2" r="1.7" fill="#c79a3f"/>
+          </g>
+        </g>
+        <path class="shl-ff" style="--shl-d:1.15s" d="M204.5 22.5 C 210 26.5 216 23.5 213.5 17" fill="none" stroke="#caa04c" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.01 4"/>
+        <g transform="translate(217 10.5) rotate(-14)">
+          <g class="shl-f-beein">
+            <path class="shl-fd" style="--shl-d:1s" pathLength="1" d="M-4.6 0 A 4.6 3.4 0 1 1 4.6 0 A 4.6 3.4 0 1 1 -4.6 0 Z" fill="#caa04c" fill-opacity=".22" stroke="#caa04c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.2s" pathLength="1" d="M-1 -3.1 L -1.7 3.1" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.26s" pathLength="1" d="M1.9 -2.9 L 1.3 3" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.32s" pathLength="1" d="M-2.6 -3.3 C -4.8 -8.3 -0.4 -9.3 0.3 -4.3" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.38s" pathLength="1" d="M1.4 -3.6 C 1.8 -7.8 5.2 -6.9 3.9 -2.9" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+      <p class="shl-sub">(tap a card, schwimpy)</p>
+    </header>
     <div class="reasons">
       <div class="flip-card"><div class="flip-inner">
         <div class="flip-face flip-front"><span class="num">1</span><span class="hint">tap me 🌸</span></div>
@@ -922,8 +1224,43 @@
 
   <!-- ============ THE SQUAD ============ -->
   <section>
+<!-- lockup: squad section -->
+<header class="shl-lockup">
+      <p class="shl-eyebrow">No. 05 &mdash; The Committee</p>
+      <h2 class="shl-title">A very important committee has assembled</h2>
+      <svg class="shl-flourish" viewBox="0 0 240 44" aria-hidden="true">
+        <path class="shl-fd" style="--shl-d:.15s" pathLength="1" d="M14 26 C 44 33 78 31 105 25.5" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.3s" pathLength="1" d="M135 25.5 C 162 30.5 186 28.5 205 21" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.55s" pathLength="1" transform="translate(62 30.8) rotate(4)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.68s" pathLength="1" transform="translate(170 27.9) rotate(192)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <g transform="translate(120 22.5)">
+          <path class="shl-fd" style="--shl-d:.5s" pathLength="1" transform="rotate(-6) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.58s" pathLength="1" transform="rotate(66) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.66s" pathLength="1" transform="rotate(140) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.74s" pathLength="1" transform="rotate(214) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.82s" pathLength="1" transform="rotate(286) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="shl-ff" style="--shl-d:1s">
+            <line x1="0" y1="0" x2="2.9" y2="-3.9" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="-4" y2="-2.1" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="1.1" y2="4.2" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="2.9" cy="-3.9" r="1.7" fill="#c79a3f"/>
+            <circle cx="-4" cy="-2.1" r="1.7" fill="#c79a3f"/>
+            <circle cx="1.1" cy="4.2" r="1.7" fill="#c79a3f"/>
+          </g>
+        </g>
+        <path class="shl-ff" style="--shl-d:1.15s" d="M204.5 22.5 C 210 26.5 216 23.5 213.5 17" fill="none" stroke="#caa04c" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.01 4"/>
+        <g transform="translate(217 10.5) rotate(-14)">
+          <g class="shl-f-beein">
+            <path class="shl-fd" style="--shl-d:1s" pathLength="1" d="M-4.6 0 A 4.6 3.4 0 1 1 4.6 0 A 4.6 3.4 0 1 1 -4.6 0 Z" fill="#caa04c" fill-opacity=".22" stroke="#caa04c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.2s" pathLength="1" d="M-1 -3.1 L -1.7 3.1" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.26s" pathLength="1" d="M1.9 -2.9 L 1.3 3" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.32s" pathLength="1" d="M-2.6 -3.3 C -4.8 -8.3 -0.4 -9.3 0.3 -4.3" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.38s" pathLength="1" d="M1.4 -3.6 C 1.8 -7.8 5.2 -6.9 3.9 -2.9" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+    </header>
     <div class="card">
-      <h2>A very important committee has assembled 📋</h2>
       <div class="squad">
         <span title="cute bumble">🐝</span>
         <span title="cute rat">🐀</span>
@@ -939,8 +1276,43 @@
 
   <!-- ============ THE QUESTION ============ -->
   <section>
+<!-- lockup: question section -->
+<header class="shl-lockup">
+      <p class="shl-eyebrow">No. 06 &mdash; The Big Question</p>
+      <h2 class="shl-title">Schwimp&hellip;</h2>
+      <svg class="shl-flourish" viewBox="0 0 240 44" aria-hidden="true">
+        <path class="shl-fd" style="--shl-d:.15s" pathLength="1" d="M14 26 C 44 33 78 31 105 25.5" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.3s" pathLength="1" d="M135 25.5 C 162 30.5 186 28.5 205 21" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.55s" pathLength="1" transform="translate(62 30.8) rotate(4)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="shl-fd" style="--shl-d:.68s" pathLength="1" transform="translate(170 27.9) rotate(192)" d="M0 0 C -5 -2 -8.5 -7.5 -6.5 -12.5 C -1.5 -12 1.5 -6 0 0 Z" fill="#cf8557" fill-opacity=".22" stroke="#cf8557" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <g transform="translate(120 22.5)">
+          <path class="shl-fd" style="--shl-d:.5s" pathLength="1" transform="rotate(-6) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.58s" pathLength="1" transform="rotate(66) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.66s" pathLength="1" transform="rotate(140) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.74s" pathLength="1" transform="rotate(214) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="shl-fd" style="--shl-d:.82s" pathLength="1" transform="rotate(286) translate(0 -3.5)" d="M0 0 C 7.2 -2.8 4 -11.2 0 -11.2 C -4 -11.2 -7.2 -2.8 0 0 Z" fill="#dd8f77" fill-opacity=".22" stroke="#dd8f77" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          <g class="shl-ff" style="--shl-d:1s">
+            <line x1="0" y1="0" x2="2.9" y2="-3.9" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="-4" y2="-2.1" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="0" y1="0" x2="1.1" y2="4.2" stroke="#caa04c" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="2.9" cy="-3.9" r="1.7" fill="#c79a3f"/>
+            <circle cx="-4" cy="-2.1" r="1.7" fill="#c79a3f"/>
+            <circle cx="1.1" cy="4.2" r="1.7" fill="#c79a3f"/>
+          </g>
+        </g>
+        <path class="shl-ff" style="--shl-d:1.15s" d="M204.5 22.5 C 210 26.5 216 23.5 213.5 17" fill="none" stroke="#caa04c" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.01 4"/>
+        <g transform="translate(217 10.5) rotate(-14)">
+          <g class="shl-f-beein">
+            <path class="shl-fd" style="--shl-d:1s" pathLength="1" d="M-4.6 0 A 4.6 3.4 0 1 1 4.6 0 A 4.6 3.4 0 1 1 -4.6 0 Z" fill="#caa04c" fill-opacity=".22" stroke="#caa04c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.2s" pathLength="1" d="M-1 -3.1 L -1.7 3.1" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.26s" pathLength="1" d="M1.9 -2.9 L 1.3 3" fill="none" stroke="#b3615a" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.32s" pathLength="1" d="M-2.6 -3.3 C -4.8 -8.3 -0.4 -9.3 0.3 -4.3" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+            <path class="shl-fd" style="--shl-d:1.38s" pathLength="1" d="M1.4 -3.6 C 1.8 -7.8 5.2 -6.9 3.9 -2.9" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </g>
+      </svg>
+    </header>
     <div class="card">
-      <h2>Schwimp... 🦐💕</h2>
       <p>Will you go on a date with me?</p>
       <div class="buttons">
         <button class="btn" id="yesBtn">Yes!! 💖</button>
@@ -1006,18 +1378,280 @@
   <footer>made with 💕 (and a small army of shrimps) for Sam, the best schwimp in the world</footer>
 
 <script>
-  // ---------- falling peony petals ----------
-  const petalEmojis = ['🌸', '💮', '🌺', '🩷'];
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement('div');
-    p.className = 'petal';
-    p.textContent = petalEmojis[i % petalEmojis.length];
-    p.style.left = Math.random() * 100 + 'vw';
-    p.style.fontSize = (16 + Math.random() * 18) + 'px';
-    p.style.animationDuration = (7 + Math.random() * 9) + 's';
-    p.style.animationDelay = -Math.random() * 12 + 's';
-    document.body.appendChild(p);
+/* ========== petal-weather (pw-) ==========
+   Drawn-petal "weather" engine. Replaces all emoji petals/confetti.
+   API:
+     PetalWeather.ambient()
+       -> calm looping fall of ~10-14 stroked bezier petals (z-index 5)
+     PetalWeather.burst({ count = 36, palette = 'candy', critters = 0 })
+       -> one-shot celebration shower from the top (z-index 101)
+          palette: 'candy' | 'terracotta' | 'mixed'
+          critters: how many emoji shrimps/bumbles/rats to sprinkle in
+   Petal geometry + stroke treatment copied from the intro screen's peonies
+   (fill-opacity 0.22, stroke-width 2, round joins).
+   Single rAF loop, transform-only per-frame updates, hard cap on particles.
+   prefers-reduced-motion: ambient() renders nothing; burst() shows a brief
+   static scatter that fades (inline-style fade, immune to global CSS rules). */
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var CANDY = ['#ffb6cf', '#f06292', '#f8a5c0'];
+  var TERRA = ['#ecb7a4', '#dd8f77', '#c56f5e',
+               '#f0cac6', '#e0a29c', '#cd8080',
+               '#f1d2b2', '#e6a97c', '#cf8557',
+               '#eec1b0', '#de9884', '#cb7364'];
+  var MIXED = CANDY.concat(TERRA);
+  var CRITTERS = ['🦐', '🐝', '🐀']; /* shrimp, bee, rat */
+  var TAU = 6.28318;
+
+  function reduced() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
+  function rr(a, b) { return a + Math.random() * (b - a); }
+  function pick(arr) { return arr[(Math.random() * arr.length) | 0]; }
+  function paletteFor(name) {
+    if (name === 'terracotta') return TERRA;
+    if (name === 'mixed') return MIXED;
+    return CANDY;
+  }
+  /* Exact petal geometry from the intro screen */
+  function petalPath(l, w) {
+    return 'M0 0 C ' + w.toFixed(1) + ' ' + (-l * 0.25).toFixed(1) + ' ' +
+           (w * 0.55).toFixed(1) + ' ' + (-l).toFixed(1) + ' 0 ' + (-l).toFixed(1) +
+           ' C ' + (-w * 0.55).toFixed(1) + ' ' + (-l).toFixed(1) + ' ' +
+           (-w).toFixed(1) + ' ' + (-l * 0.25).toFixed(1) + ' 0 0 Z';
+  }
+
+  var ambientLayer = null, burstLayer = null;
+  function layer(which) {
+    var cur = which === 'ambient' ? ambientLayer : burstLayer;
+    if (cur && cur.isConnected) return cur;
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'pw-layer pw-layer-' + which);
+    svg.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(svg);
+    if (which === 'ambient') ambientLayer = svg; else burstLayer = svg;
+    return svg;
+  }
+
+  var parts = [];
+  var ambientOn = false;
+  var rafId = null, lastTs = null;
+
+  function maxParts()      { return window.innerWidth < 500 ? 28 : 45; }
+  function ambientTarget() { return window.innerWidth < 500 ? 10 : 13; }
+  function ambientCount() {
+    var n = 0;
+    for (var i = 0; i < parts.length; i++) if (parts[i].mode === 'ambient') n++;
+    return n;
+  }
+
+  function makePetalEl(color, l, w) {
+    var el = document.createElementNS(NS, 'path');
+    el.setAttribute('d', petalPath(l, w));
+    el.setAttribute('fill', color);
+    el.setAttribute('fill-opacity', '0.22');
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', '2');
+    el.setAttribute('stroke-linejoin', 'round');
+    el.setAttribute('stroke-linecap', 'round');
+    el.setAttribute('opacity', '0.9');
+    return el;
+  }
+  function makeCritterEl(glyph, size) {
+    var el = document.createElementNS(NS, 'text');
+    el.setAttribute('text-anchor', 'middle');
+    el.setAttribute('dominant-baseline', 'central');
+    el.setAttribute('font-size', size.toFixed(0));
+    el.textContent = glyph;
+    return el;
+  }
+
+  /* (re)randomize an ambient petal's drift parameters; first=true scatters
+     it through the viewport so the sky is populated from the start */
+  function seedAmbient(p, first) {
+    var vw = window.innerWidth, vh = window.innerHeight;
+    p.x = rr(-20, vw + 20);
+    p.y = first ? rr(-vh * 0.15, vh * 0.95) : rr(-150, -60);
+    p.vy = vh * rr(0.05, 0.1);                 /* 10-20 s to cross */
+    p.drift = rr(-16, 16);
+    p.swayA = rr(22, 48);
+    p.swayF = rr(0.16, 0.4) * TAU;
+    p.phase = rr(0, TAU);
+    p.rot0 = rr(0, 360);
+    p.spin = rr(10, 30) * (Math.random() < 0.5 ? -1 : 1);
+    p.tilt = rr(8, 20);
+    p.age = 0;
+    p.delay = 0;
+  }
+  function applyTransform(p) {
+    var x = p.x + Math.sin(p.age * p.swayF + p.phase) * p.swayA;
+    var rot = p.rot0 + p.spin * p.age +
+              Math.sin(p.age * p.swayF * 0.7 + p.phase) * p.tilt;
+    p.el.setAttribute('transform',
+      'translate(' + x.toFixed(1) + ' ' + p.y.toFixed(1) + ') rotate(' + rot.toFixed(1) + ')');
+  }
+  function spawnAmbient(first) {
+    var l = rr(20, 36);
+    var p = { kind: 'petal', mode: 'ambient',
+              el: makePetalEl(pick(MIXED), l, l * rr(0.42, 0.52)) };
+    seedAmbient(p, first);
+    applyTransform(p);
+    layer('ambient').appendChild(p.el);
+    parts.push(p);
+  }
+
+  function frame(ts) {
+    rafId = null;
+    if (lastTs == null) lastTs = ts;
+    var dt = Math.min((ts - lastTs) / 1000, 0.064);
+    lastTs = ts;
+    var vh = window.innerHeight;
+    var targetA = ambientTarget();
+    var nA = ambientOn ? ambientCount() : 0;
+    for (var i = parts.length - 1; i >= 0; i--) {
+      var p = parts[i];
+      if (p.delay > 0) { p.delay -= dt; continue; }
+      p.age += dt;
+      p.y += p.vy * dt;
+      p.x += p.drift * dt;
+      if (p.y > vh + 90) {
+        if (p.mode === 'ambient' && ambientOn && nA <= targetA) {
+          seedAmbient(p, false);                   /* recycle at the top */
+        } else {
+          if (p.mode === 'ambient') nA--;
+          p.el.remove();
+          parts.splice(i, 1);
+          continue;
+        }
+      }
+      applyTransform(p);
+    }
+    if (parts.length || ambientOn) rafId = requestAnimationFrame(frame);
+    else lastTs = null;
+  }
+  function ensureLoop() {
+    if (rafId == null) { lastTs = null; rafId = requestAnimationFrame(frame); }
+  }
+
+  var resizeTimer = null;
+  function onResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (!ambientOn) return;
+      var need = ambientTarget() - ambientCount();
+      for (var i = 0; i < need; i++) spawnAmbient(true);
+      if (need > 0) ensureLoop();
+      /* excess petals despawn on their own when they exit the viewport */
+    }, 300);
+  }
+
+  function ambient() {
+    if (ambientOn || reduced()) return;
+    ambientOn = true;
+    var lay = layer('ambient');
+    lay.style.opacity = '0';
+    var n = ambientTarget();
+    for (var i = 0; i < n; i++) spawnAmbient(true);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { lay.style.opacity = '1'; });
+    });
+    window.addEventListener('resize', onResize);
+    ensureLoop();
+  }
+
+  /* reduced-motion burst: brief static scatter that fades out.
+     Fade is driven by rAF on an inline style so the site's global
+     reduced-motion CSS (zeroed transitions/animations) can't cancel it. */
+  function staticBurst(count, pal, critters) {
+    var lay = layer('burst');
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var total = Math.min(count + critters, maxParts());
+    var critterN = Math.min(critters, total);
+    var g = document.createElementNS(NS, 'g');
+    for (var i = 0; i < total; i++) {
+      var el;
+      if (i < critterN) {
+        el = makeCritterEl(pick(CRITTERS), rr(20, 28));
+      } else {
+        var l = rr(20, 38);
+        el = makePetalEl(pick(pal), l, l * rr(0.42, 0.52));
+      }
+      el.setAttribute('transform',
+        'translate(' + rr(vw * 0.04, vw * 0.96).toFixed(1) + ' ' +
+                       rr(vh * 0.06, vh * 0.85).toFixed(1) + ') rotate(' +
+                       rr(0, 360).toFixed(1) + ')');
+      g.appendChild(el);
+    }
+    lay.appendChild(g);
+    var t0 = null;
+    function fade(ts) {
+      if (t0 == null) t0 = ts;
+      var t = (ts - t0) / 1000;
+      var o = t < 0.9 ? 1 : 1 - (t - 0.9) / 1.2;
+      if (o <= 0) { g.remove(); return; }
+      g.style.opacity = o.toFixed(3);
+      requestAnimationFrame(fade);
+    }
+    requestAnimationFrame(fade);
+  }
+
+  function burst(opts) {
+    opts = opts || {};
+    var count = opts.count == null ? 36 : Math.max(0, opts.count | 0);
+    var pal = paletteFor(opts.palette || 'candy');
+    var critters = Math.max(0, (opts.critters | 0) || 0);
+    if (reduced()) { staticBurst(count, pal, critters); return; }
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var room = Math.max(0, maxParts() - parts.length);
+    /* petals stay the star of the show: critters take at most 1/4 of the room */
+    var critterN = Math.min(critters, Math.round(room * 0.25));
+    var petalN = Math.min(count, room - critterN);
+    var total = petalN + critterN;
+    if (!total) return;
+    /* shuffle critters in among the petals */
+    var flags = [];
+    for (var i = 0; i < total; i++) flags.push(i < critterN);
+    for (var j = total - 1; j > 0; j--) {
+      var k = (Math.random() * (j + 1)) | 0;
+      var tmp = flags[j]; flags[j] = flags[k]; flags[k] = tmp;
+    }
+    var lay = layer('burst');
+    var stagger = Math.min(1.1, total * 0.03);   /* shower builds over ~1 s */
+    for (var m = 0; m < total; m++) {
+      var isCritter = flags[m];
+      var p = {
+        kind: isCritter ? 'critter' : 'petal',
+        mode: 'burst',
+        delay: (m / total) * stagger + rr(0, 0.07),
+        x: rr(-10, vw + 10),
+        y: rr(-170, -50),
+        vy: vh * (isCritter ? rr(0.26, 0.4) : rr(0.3, 0.52)),
+        drift: rr(-70, 70),
+        swayA: rr(8, 26),
+        swayF: rr(0.55, 1.3) * TAU,
+        phase: rr(0, TAU),
+        rot0: rr(0, 360),
+        spin: isCritter ? rr(-60, 60) : rr(90, 300) * (Math.random() < 0.5 ? -1 : 1),
+        tilt: 0,
+        age: 0,
+      };
+      if (isCritter) {
+        p.rot0 = rr(-24, 24);
+        p.el = makeCritterEl(pick(CRITTERS), rr(20, 30));
+      } else {
+        var l = rr(20, 40);
+        p.el = makePetalEl(pick(pal), l, l * rr(0.42, 0.52));
+      }
+      applyTransform(p);
+      lay.appendChild(p.el);
+      parts.push(p);
+    }
+    ensureLoop();
+  }
+
+  window.PetalWeather = { ambient: ambient, burst: burst };
+})();
 
   // ---------- floating critters (clickable!) ----------
   const critterSounds = {
@@ -1100,19 +1734,7 @@
   // ---------- yes! ----------
   function sayYes() {
     document.getElementById('yesOverlay').classList.add('show');
-    const confettiEmojis = ['🦐', '🐝', '🐀', '🌸', '💖', '💮', '🩷', '🎉'];
-    for (let i = 0; i < 60; i++) {
-      setTimeout(() => {
-        const c = document.createElement('div');
-        c.className = 'confetti';
-        c.textContent = confettiEmojis[Math.floor(Math.random() * confettiEmojis.length)];
-        c.style.left = Math.random() * 100 + 'vw';
-        c.style.fontSize = (18 + Math.random() * 26) + 'px';
-        c.style.animationDuration = (2.5 + Math.random() * 3) + 's';
-        document.body.appendChild(c);
-        setTimeout(() => c.remove(), 6000);
-      }, i * 90);
-    }
+    PetalWeather.burst({ count: 44, palette: 'candy', critters: 10 });
   }
   yesBtn.addEventListener('click', sayYes);
 
@@ -1158,20 +1780,7 @@
   eggInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') checkEgg(); });
 
   function petalBurst() {
-    const petals = ['🌸', '💮', '🩷', '💖'];
-    for (let i = 0; i < 30; i++) {
-      setTimeout(() => {
-        const c = document.createElement('div');
-        c.className = 'confetti';
-        c.textContent = petals[Math.floor(Math.random() * petals.length)];
-        c.style.left = Math.random() * 100 + 'vw';
-        c.style.fontSize = (18 + Math.random() * 24) + 'px';
-        c.style.animationDuration = (2.5 + Math.random() * 3) + 's';
-        c.style.zIndex = 120;
-        document.body.appendChild(c);
-        setTimeout(() => c.remove(), 6000);
-      }, i * 70);
-    }
+    PetalWeather.burst({ count: 36, palette: 'candy', critters: 4 });
   }
 
   // ---------- our song ----------
@@ -1209,19 +1818,7 @@
       candlesOut++;
       if (candlesOut === 5) {
         wishMsg.textContent = 'yayyy!! did you make a wish, schwimp? 🌠💕';
-        const treats = ['🎂', '🌸', '🦐', '💖', '🎉', '🐝'];
-        for (let i = 0; i < 25; i++) {
-          setTimeout(() => {
-            const c = document.createElement('div');
-            c.className = 'confetti';
-            c.textContent = treats[Math.floor(Math.random() * treats.length)];
-            c.style.left = Math.random() * 100 + 'vw';
-            c.style.fontSize = (18 + Math.random() * 22) + 'px';
-            c.style.animationDuration = (2.5 + Math.random() * 3) + 's';
-            document.body.appendChild(c);
-            setTimeout(() => c.remove(), 6000);
-          }, i * 80);
-        }
+        PetalWeather.burst({ count: 30, palette: 'candy', critters: 6 });
       } else {
         wishMsg.textContent = (5 - candlesOut) + ' to go... keep blowing, schwimp 🌬️';
       }
@@ -1435,8 +2032,71 @@
     document.body.classList.remove('locked');
     window.scrollTo(0, 0);
     if (window.__stopPeonies) setTimeout(window.__stopPeonies, 1100);
-    petalBurst();
+    PetalWeather.ambient();
+    PetalWeather.burst({ count: 40, palette: 'mixed', critters: 4 });
   });
+// ================================================================
+// shl- : section heading lockups — scroll-in draw animation.
+// Auto-initializes. window.shlInit() may be called again after
+// inserting new .shl-lockup nodes (idempotent).
+// No-JS / reduced-motion fallback: lockups are fully visible by
+// default; animation styles only apply once .shl-anim is added here.
+// ================================================================
+(function () {
+  'use strict';
+
+  var reduce = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var shlObserver = null;
+
+  function shlInit() {
+    var lockups = document.querySelectorAll('.shl-lockup:not([data-shl-bound])');
+    if (!lockups.length) return;
+
+    // static path: show everything instantly
+    if (reduce || !('IntersectionObserver' in window)) {
+      for (var i = 0; i < lockups.length; i++) {
+        lockups[i].setAttribute('data-shl-bound', '');
+        lockups[i].classList.add('shl-in');
+      }
+      return;
+    }
+
+    if (!shlObserver) {
+      shlObserver = new IntersectionObserver(function (entries) {
+        for (var j = 0; j < entries.length; j++) {
+          if (entries[j].isIntersecting) {
+            var el = entries[j].target;
+            shlObserver.unobserve(el);
+            // defer a frame so the prepped (hidden) styles are committed
+            // first and the draw-on transition actually runs
+            requestAnimationFrame(function (target) {
+              return function () { target.classList.add('shl-in'); };
+            }(el));
+          }
+        }
+      }, { threshold: 0.35, rootMargin: '0px 0px -6% 0px' });
+    }
+
+    for (var k = 0; k < lockups.length; k++) {
+      lockups[k].setAttribute('data-shl-bound', '');
+      lockups[k].classList.add('shl-anim');
+    }
+    void document.body.offsetWidth; // commit prep styles before observing
+    for (var m = 0; m < lockups.length; m++) {
+      shlObserver.observe(lockups[m]);
+    }
+  }
+
+  window.shlInit = shlInit;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', shlInit);
+  } else {
+    shlInit();
+  }
+})();
 </script>
 </body>
 </html>
