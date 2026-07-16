@@ -696,15 +696,6 @@
   }
   #eggInput:focus { border-color: var(--pink-deep); }
   #eggHint { min-height: 1.4em; font-size: 0.9rem; font-style: italic; color: var(--pink-deep); margin-bottom: 12px; }
-  .egg-letter { text-align: left; }
-  .egg-letter p {
-    font-style: italic;
-    font-size: 1.05rem;
-    line-height: 1.9;
-    color: #8a3b5c;
-    margin-bottom: 12px;
-  }
-  .egg-letter .signature { text-align: right; font-weight: bold; color: var(--pink-dark); font-size: 1.15rem; }
   .modal-close {
     position: absolute;
     top: 10px;
@@ -1207,6 +1198,373 @@
   font-size: clamp(1.35rem, 3.6vw, 1.7rem);
   color: #b3615a;
 }
+/* ================================================================
+   wsl- : sealed-letter — a wax-sealed envelope reveal for the
+   easter-egg letter inside #eggOverlay.
+   (speaks the enter-screen's language: paper #f4ecdd + feTurbulence
+    grain, terracotta #c56f5e wax like .shl-seal, gold #caa04c,
+    ink #b3615a, taupe #a98b6f, Cormorant Garamond)
+
+   Choreography (JS adds cumulative stage classes on .wsl):
+     wsl-in    (0ms)    envelope settles in, sealed
+     wsl-crack (480ms)  wax seal cracks in two, halves fall away
+     wsl-open  (880ms)  flap lifts open in 3D (rotateX, preserve-3d)
+     wsl-out   (1180ms) sheet slides up, letter expands to readable size
+     wsl-read  (1320ms) paragraphs fade in staggered; signature +
+                        flourish last
+     wsl-done  (3700ms) sequence complete
+   wsl-skip kills every transition -> instant final state.
+   ================================================================ */
+
+/* ---------- host overrides: the modal-card becomes an invisible
+   shell so the envelope floats on the warm dim scrim ---------- */
+#eggOverlay { background: rgba(120, 88, 66, 0.45); }
+#eggOverlay .modal-card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  max-height: none;
+  overflow: visible;
+  text-align: left;
+}
+
+/* ---------- root: scene + paper stacked in one grid cell ---------- */
+.wsl {
+  display: grid;
+  width: 100%;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+.wsl > * { grid-area: 1 / 1; }
+
+/* ---------- close button (44x44, alive at every stage) ---------- */
+button.wsl-close {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(253, 247, 236, 0.94);
+  border: 1px solid rgba(197, 111, 94, 0.45);
+  border-radius: 50%;
+  color: #b3615a;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 40;
+  box-shadow: 0 4px 14px rgba(90, 55, 38, 0.28);
+  transition: transform 0.15s ease;
+}
+button.wsl-close:hover { transform: scale(1.08); }
+
+/* ================= envelope scene ================= */
+.wsl-scene {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 10px 4px;
+  opacity: 0;
+  transform: translateY(20px) scale(0.94);
+  transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.22, 0.85, 0.32, 1.08);
+}
+.wsl-in  .wsl-scene { opacity: 1; transform: none; }
+.wsl-out .wsl-scene {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  transition: opacity 0.45s ease 0.1s, transform 0.5s ease 0.1s;
+  pointer-events: none;
+}
+
+.wsl-env {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 380 / 258;
+  perspective: 1100px;
+  transform: rotate(-1.2deg);
+  filter:
+    drop-shadow(0 3px 6px rgba(138, 59, 92, 0.16))
+    drop-shadow(0 18px 34px rgba(90, 55, 38, 0.3));
+}
+.wsl-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.wsl-clip-back {
+  z-index: 1;
+  background:
+    radial-gradient(120% 90% at 30% 0%, rgba(255, 253, 246, 0.7) 0%, rgba(255, 253, 246, 0) 55%),
+    linear-gradient(172deg, #f7f0e0 0%, #f3ead6 55%, #ecdfc5 100%);
+}
+.wsl-clip-back::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 26px rgba(107, 74, 63, 0.12);
+}
+.wsl-grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.38;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* the folded letter peeking inside the pocket */
+.wsl-stub {
+  position: absolute;
+  z-index: 2;
+  left: 7%;
+  right: 7%;
+  top: 9%;
+  bottom: 14%;
+  background: linear-gradient(180deg, #fdf7ec 0%, #f9f1e0 100%);
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -2px 8px rgba(107, 74, 63, 0.14);
+  transition: transform 0.5s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+.wsl-stub-note {
+  position: absolute;
+  top: 9px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #b3615a;
+  opacity: 0.9;
+}
+.wsl-stub::after {
+  content: '';
+  position: absolute;
+  left: 11%;
+  right: 11%;
+  top: 46px;
+  bottom: 14%;
+  background: repeating-linear-gradient(180deg,
+    rgba(169, 139, 111, 0.32) 0 1px, transparent 1px 11px);
+}
+.wsl-out .wsl-stub { transform: translateY(-34%); }
+
+.wsl-clip-front { z-index: 3; pointer-events: none; }
+.wsl-pocket { display: block; width: 100%; height: 100%; }
+
+/* flap: hinged at the top edge, opens in 3D like .flip-inner */
+.wsl-flap3d {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 61.2%; /* 158/258 of the envelope */
+  transform-origin: 50% 0%;
+  transform-style: preserve-3d;
+  transition: transform 0.68s cubic-bezier(0.55, 0.06, 0.35, 1);
+}
+.wsl-open .wsl-flap3d { transform: rotateX(177deg); }
+.wsl-out  .wsl-flap3d { z-index: 0; }
+.wsl-flap { display: block; width: 100%; height: 100%; }
+
+/* ---------- the wax seal (two pre-cracked halves) ---------- */
+.wsl-seal {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  top: 58.9%; /* the flap tip */
+  width: 88px;
+  height: 88px;
+  margin: -46px 0 0 -44px;
+  transform: rotate(-5deg);
+  filter: drop-shadow(0 4px 8px rgba(122, 48, 38, 0.35));
+}
+.wsl-seal-half { position: absolute; inset: 0; width: 100%; height: 100%; }
+.wsl-crack .wsl-seal { animation: wsl-sealpop 0.16s ease; }
+@keyframes wsl-sealpop {
+  0%, 100% { transform: rotate(-5deg) scale(1); }
+  45%      { transform: rotate(-3.2deg) scale(1.05); }
+}
+.wsl-seal-l,
+.wsl-seal-r {
+  transition:
+    transform 0.62s cubic-bezier(0.5, 0.02, 0.85, 0.45) 0.1s,
+    opacity 0.4s ease 0.38s;
+}
+.wsl-crack .wsl-seal-l { transform: translate(-30px, 48px) rotate(-30deg); opacity: 0; }
+.wsl-crack .wsl-seal-r { transform: translate(26px, 60px) rotate(24deg);  opacity: 0; }
+
+/* caption under the envelope, echoing the enter screen */
+.wsl-cap {
+  margin: 18px 0 0;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.98rem;
+  letter-spacing: 0.02em;
+  color: #f7ecd9;
+  text-shadow: 0 1px 6px rgba(90, 55, 38, 0.45);
+}
+
+/* ================= the letter itself ================= */
+.wsl-paper {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(64px) scale(0.6);
+  transform-origin: 50% 28%;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 4px 10px rgba(171, 98, 76, 0.16))
+    drop-shadow(0 18px 44px rgba(171, 98, 76, 0.3));
+  transition:
+    opacity 0.4s ease,
+    transform 0.62s cubic-bezier(0.2, 0.75, 0.28, 1.04);
+}
+.wsl-out .wsl-paper {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 0.16s, 0.16s;
+}
+
+/* deckled-edge sheet (mask unions: body + two irregular scallop runs
+   top and bottom => ragged handmade edge) */
+.wsl-paper-in {
+  position: relative;
+  background: #fdf7ec;
+  outline: 1px solid #d9b9a4;
+  outline-offset: -9px;
+  -webkit-mask-image:
+    linear-gradient(180deg, transparent 0 6px, #000 6px calc(100% - 6px), transparent calc(100% - 6px) 100%),
+    radial-gradient(circle at 7px 7px,  #000 5.2px, transparent 5.7px),
+    radial-gradient(circle at 11px 8px, #000 6.1px, transparent 6.6px),
+    radial-gradient(circle at 7px 1px,  #000 5.2px, transparent 5.7px),
+    radial-gradient(circle at 11px 0,   #000 6.1px, transparent 6.6px);
+  -webkit-mask-size: 100% 100%, 15px 8px, 23px 8px, 15px 8px, 23px 8px;
+  -webkit-mask-position: 0 0, 0 0, 4px 0, 0 100%, 6px 100%;
+  -webkit-mask-repeat: no-repeat, repeat-x, repeat-x, repeat-x, repeat-x;
+  mask-image:
+    linear-gradient(180deg, transparent 0 6px, #000 6px calc(100% - 6px), transparent calc(100% - 6px) 100%),
+    radial-gradient(circle at 7px 7px,  #000 5.2px, transparent 5.7px),
+    radial-gradient(circle at 11px 8px, #000 6.1px, transparent 6.6px),
+    radial-gradient(circle at 7px 1px,  #000 5.2px, transparent 5.7px),
+    radial-gradient(circle at 11px 0,   #000 6.1px, transparent 6.6px);
+  mask-size: 100% 100%, 15px 8px, 23px 8px, 15px 8px, 23px 8px;
+  mask-position: 0 0, 0 0, 4px 0, 0 100%, 6px 100%;
+  mask-repeat: no-repeat, repeat-x, repeat-x, repeat-x, repeat-x;
+}
+.wsl-paper-scroll {
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: clamp(26px, 6vw, 42px) clamp(24px, 6vw, 42px) clamp(28px, 6vw, 40px);
+}
+
+/* stationery type */
+.wsl-eyebrow {
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em; /* optically re-center tracked text */
+  color: #caa04c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  margin: 0 0 16px;
+}
+.wsl-eyebrow::after {
+  content: '';
+  display: block;
+  width: 44px;
+  height: 1px;
+  margin: 10px auto 0;
+  background: rgba(202, 160, 76, 0.55);
+}
+.wsl-body p {
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.05rem, 2.9vw, 1.16rem);
+  line-height: 1.85;
+  color: #6b4a3f;
+  text-align: left;
+  margin: 0 0 14px;
+}
+.wsl-sig {
+  margin-top: 16px;
+  text-align: right;
+}
+.wsl-signature {
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.32rem;
+  color: #b3615a;
+  margin: 0 0 2px !important;
+  text-align: right !important;
+}
+.wsl-flourish {
+  width: 176px;
+  max-width: 72%;
+  height: auto;
+  display: inline-block;
+  overflow: visible;
+  margin-top: -6px;
+}
+
+/* ---------- staggered reveal ---------- */
+.wsl-line {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.55s ease var(--wsl-d, 0s),
+    transform 0.55s cubic-bezier(0.22, 0.8, 0.32, 1) var(--wsl-d, 0s);
+}
+.wsl-read .wsl-line { opacity: 1; transform: none; }
+
+/* signature underline draws itself (pathLength=1 trick, like shl-) */
+.wsl-fmain { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.wsl-read .wsl-fmain {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.62s cubic-bezier(0.45, 0.05, 0.35, 1) 1.62s;
+}
+.wsl-fgold { opacity: 0; }
+.wsl-read .wsl-fgold { opacity: 1; transition: opacity 0.45s ease 2.02s; }
+
+/* ---------- skip: everything snaps to its stage state ---------- */
+.wsl-skip,
+.wsl-skip * { transition: none !important; animation: none !important; }
+
+/* ---------- reduced motion: already open, fully readable ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .wsl .wsl-scene { display: none; }
+  .wsl .wsl-paper { opacity: 1; transform: none; pointer-events: auto; transition: none; }
+  .wsl .wsl-line  { opacity: 1; transform: none; transition: none; }
+  .wsl .wsl-fmain { stroke-dashoffset: 0; transition: none; }
+  .wsl .wsl-fgold { opacity: 1; transition: none; }
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 420px) {
+  .wsl-seal { width: 78px; height: 78px; margin: -41px 0 0 -39px; }
+  .wsl-stub-note { font-size: 0.88rem; }
+  .wsl-stub::after { top: 40px; }
+  .wsl-paper-scroll { padding: 24px 22px 26px; }
+  .wsl-body p { line-height: 1.78; margin-bottom: 12px; }
+  .wsl-eyebrow { margin-bottom: 12px; }
+  .wsl-sig { margin-top: 12px; }
+}
+
+/* crack-edge strokes appear only once the seal actually breaks */
+.wsl-cline { opacity: 0; }
+.wsl-crack .wsl-cline { opacity: 1; }
 </style>
 </head>
 <body>
@@ -1728,21 +2086,189 @@
   <!-- ============ EASTER EGG: SECRET LETTER ============ -->
   <div class="modal" id="eggOverlay">
     <div class="modal-card">
-      <button class="modal-close" aria-label="close">✕</button>
-      <h3>You found the secret 💌</h3>
-      <div class="egg-letter">
-        <p>Sam — of course you found this. You're the smart one.</p>
-        <p>I wanted one little corner of this page to be just for you,
-           away from everyone else. So here it is, just between us:
-           you are the best thing that has ever happened to me. You make
-           the ordinary days my favourite days, and every plan better
-           just by being in it.</p>
-        <p>However many birthdays we get to celebrate, I'll spend every
-           single one trying to make you feel as loved as you make me feel.</p>
-        <p>Happy birthday, my schwimp. I love you more than all the
-           shrimps in the sea.</p>
-        <p class="signature">— your Johnathan 🦐💕</p>
+<!-- ==================== wsl- sealed-letter ====================
+     New inner content for #eggOverlay .modal-card (replaces the
+     old <button class="modal-close">, <h3> and <div class="egg-letter">).
+     Letter text is verbatim from the original .egg-letter. -->
+<button class="modal-close wsl-close" aria-label="close">✕</button>
+<div class="wsl" id="wsl">
+
+  <!-- ---------- envelope scene ---------- -->
+  <div class="wsl-scene" aria-hidden="true">
+    <div class="wsl-env">
+
+      <!-- back panel + paper grain (filter def shared by all wsl- grain) -->
+      <div class="wsl-clip wsl-clip-back">
+        <svg class="wsl-grain" aria-hidden="true">
+          <filter id="wsl-grainF"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"></feTurbulence><feColorMatrix type="saturate" values="0"></feColorMatrix></filter>
+          <rect width="100%" height="100%" filter="url(#wsl-grainF)"></rect>
+        </svg>
       </div>
+
+      <!-- the folded letter peeking in the pocket -->
+      <div class="wsl-stub">
+        <span class="wsl-stub-note">for my schwimp</span>
+      </div>
+
+      <!-- front pocket: side + bottom folds meeting at the seal point -->
+      <div class="wsl-clip wsl-clip-front">
+        <svg class="wsl-pocket" viewBox="0 0 380 258" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="wsl-pg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f4ebd8"/>
+              <stop offset="1" stop-color="#ecdfc5"/>
+            </linearGradient>
+            <linearGradient id="wsl-pgb" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f7f0de"/>
+              <stop offset="1" stop-color="#efe3cb"/>
+            </linearGradient>
+            <clipPath id="wsl-pkclip"><path d="M0 0 L190 152 L380 0 L380 258 L0 258 Z"/></clipPath>
+          </defs>
+          <path d="M0 0 L190 152 L380 0 L380 258 L0 258 Z" fill="url(#wsl-pg)"/>
+          <path d="M0 2 L190 152 L380 2" fill="none" stroke="rgba(171,132,99,0.32)" stroke-width="1.5"/>
+          <path d="M0 258 L190 152 L380 258 Z" fill="url(#wsl-pgb)"/>
+          <path d="M0 256 L190 152 L380 256" fill="none" stroke="rgba(171,132,99,0.3)" stroke-width="1.3"/>
+          <g clip-path="url(#wsl-pkclip)">
+            <rect width="380" height="258" filter="url(#wsl-grainF)" opacity="0.35" style="mix-blend-mode:multiply"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- flap: lifts open with rotateX on the preserve-3d wrapper -->
+      <div class="wsl-flap3d">
+        <svg class="wsl-flap" viewBox="0 0 380 158" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="wsl-fg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f8f2e3"/>
+              <stop offset="1" stop-color="#eee2c8"/>
+            </linearGradient>
+            <clipPath id="wsl-flapclip">
+              <path d="M0 4 L18 2.4 L39 4.4 L62 2.2 L84 4.6 L108 2.6 L131 4.2 L155 2.4 L178 4.4 L202 2.3 L225 4.5 L248 2.6 L271 4.3 L295 2.4 L318 4.4 L341 2.5 L362 4.2 L380 3 L190 152 Z"/>
+            </clipPath>
+          </defs>
+          <!-- subtle deckled top edge -->
+          <path d="M0 4 L18 2.4 L39 4.4 L62 2.2 L84 4.6 L108 2.6 L131 4.2 L155 2.4 L178 4.4 L202 2.3 L225 4.5 L248 2.6 L271 4.3 L295 2.4 L318 4.4 L341 2.5 L362 4.2 L380 3 L190 152 Z" fill="url(#wsl-fg)"/>
+          <path d="M2 5 L190 150 M378 4 L190 150" fill="none" stroke="rgba(171,132,99,0.3)" stroke-width="1.2"/>
+          <g clip-path="url(#wsl-flapclip)">
+            <rect width="380" height="158" filter="url(#wsl-grainF)" opacity="0.32" style="mix-blend-mode:multiply"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- rose wax seal, pre-cracked into two clipped halves -->
+      <div class="wsl-seal">
+        <svg class="wsl-seal-half wsl-seal-l" viewBox="0 0 76 76" aria-hidden="true">
+          <defs>
+            <radialGradient id="wsl-wax-l" cx="42%" cy="36%" r="72%">
+              <stop offset="0%" stop-color="#d8907e"/>
+              <stop offset="55%" stop-color="#c56f5e"/>
+              <stop offset="100%" stop-color="#ad574a"/>
+            </radialGradient>
+            <clipPath id="wsl-crack-l"><path d="M-2 -2 L41.7 -2 L35.7 12 L43.7 24 L34.7 36 L42.7 50 L36.7 62 L40.7 78 L-2 78 Z"/></clipPath>
+          </defs>
+          <g clip-path="url(#wsl-crack-l)">
+            <g transform="scale(1.1875)">
+              <circle cx="9.8" cy="45.2" r="4" fill="#b45c4d"/>
+              <circle cx="54.6" cy="18.6" r="3.2" fill="#b45c4d"/>
+              <path fill="url(#wsl-wax-l)" d="M32 5.8 C 38.6 4.8 46.4 7.6 51.2 12.6 C 55.9 17.5 58.6 24.2 57.9 31 C 57.2 37.4 54.4 44 49.6 48.6 C 44.8 53.2 37.8 56.6 31 56 C 24.4 55.4 17.4 52 12.8 46.7 C 8.4 41.6 6 34.6 6.7 27.9 C 7.4 21.3 11.2 14.7 16.8 10.5 C 21.4 7.1 26.6 6.6 32 5.8 Z"/>
+              <circle cx="32" cy="31.4" r="21" fill="rgba(94,32,25,0.05)" stroke="rgba(94,32,25,0.28)" stroke-width="1.2"/>
+              <circle cx="32.7" cy="32.2" r="21" fill="none" stroke="rgba(255,224,206,0.32)" stroke-width="1.1"/>
+              <g fill="none" stroke="#f2cfbd" stroke-linecap="round" stroke-linejoin="round" opacity="0.82">
+                <path stroke-width="4.6" d="M40.5 23.5 C 34.5 17.5 25 18.5 21 25 C 17.5 30.5 19.5 37.5 25.5 40.5"/>
+                <path stroke-width="1.4" d="M40.5 23.5 C 42.6 24.5 44.2 26.3 45 28.4"/>
+                <path stroke-width="1.3" d="M41.6 25.6 C 43.4 29 43.4 32.8 41.8 36.4"/>
+                <path stroke-width="1.3" d="M40.2 26.4 C 41.5 29.6 41.2 33.2 39.5 36.2"/>
+                <path stroke-width="1.6" d="M25.5 40.5 C 27.9 42 29.6 44.2 30.5 46.8"/>
+                <path stroke-width="1.6" d="M25.5 40.5 C 26.5 42.9 26.6 45.6 25.9 48"/>
+                <path stroke-width="1.6" d="M25.5 40.5 C 24 42.5 21.8 44 19.3 44.8"/>
+              </g>
+              <g fill="none" stroke="#aa5240" stroke-linecap="round">
+                <path stroke-width="1.7" d="M31.4 16.8 L 31.2 21.8"/>
+                <path stroke-width="1.7" d="M23.6 20.2 C 24.7 21.5 25.8 22.6 27.3 23.4"/>
+                <path stroke-width="1.7" d="M17.5 29.3 L 22.5 29.6"/>
+              </g>
+              <circle cx="39" cy="22.7" r="1.15" fill="#8a4237"/>
+              <path d="M18.5 15.2 C 21.8 12.4 25.8 10.6 30 10.2" fill="none" stroke="rgba(255,238,228,0.3)" stroke-width="2.6" stroke-linecap="round"/>
+            </g>
+            <path class="wsl-cline" d="M41 -2 L35 12 L43 24 L34 36 L42 50 L36 62 L40 78" fill="none" stroke="rgba(94,32,25,0.42)" stroke-width="1.5"/>
+          </g>
+        </svg>
+        <svg class="wsl-seal-half wsl-seal-r" viewBox="0 0 76 76" aria-hidden="true">
+          <defs>
+            <radialGradient id="wsl-wax-r" cx="42%" cy="36%" r="72%">
+              <stop offset="0%" stop-color="#d8907e"/>
+              <stop offset="55%" stop-color="#c56f5e"/>
+              <stop offset="100%" stop-color="#ad574a"/>
+            </radialGradient>
+            <clipPath id="wsl-crack-r"><path d="M78 -2 L41 -2 L35 12 L43 24 L34 36 L42 50 L36 62 L40 78 L78 78 Z"/></clipPath>
+          </defs>
+          <g clip-path="url(#wsl-crack-r)">
+            <g transform="scale(1.1875)">
+              <circle cx="9.8" cy="45.2" r="4" fill="#b45c4d"/>
+              <circle cx="54.6" cy="18.6" r="3.2" fill="#b45c4d"/>
+              <path fill="url(#wsl-wax-r)" d="M32 5.8 C 38.6 4.8 46.4 7.6 51.2 12.6 C 55.9 17.5 58.6 24.2 57.9 31 C 57.2 37.4 54.4 44 49.6 48.6 C 44.8 53.2 37.8 56.6 31 56 C 24.4 55.4 17.4 52 12.8 46.7 C 8.4 41.6 6 34.6 6.7 27.9 C 7.4 21.3 11.2 14.7 16.8 10.5 C 21.4 7.1 26.6 6.6 32 5.8 Z"/>
+              <circle cx="32" cy="31.4" r="21" fill="rgba(94,32,25,0.05)" stroke="rgba(94,32,25,0.28)" stroke-width="1.2"/>
+              <circle cx="32.7" cy="32.2" r="21" fill="none" stroke="rgba(255,224,206,0.32)" stroke-width="1.1"/>
+              <g fill="none" stroke="#f2cfbd" stroke-linecap="round" stroke-linejoin="round" opacity="0.82">
+                <path stroke-width="4.6" d="M40.5 23.5 C 34.5 17.5 25 18.5 21 25 C 17.5 30.5 19.5 37.5 25.5 40.5"/>
+                <path stroke-width="1.4" d="M40.5 23.5 C 42.6 24.5 44.2 26.3 45 28.4"/>
+                <path stroke-width="1.3" d="M41.6 25.6 C 43.4 29 43.4 32.8 41.8 36.4"/>
+                <path stroke-width="1.3" d="M40.2 26.4 C 41.5 29.6 41.2 33.2 39.5 36.2"/>
+                <path stroke-width="1.6" d="M25.5 40.5 C 27.9 42 29.6 44.2 30.5 46.8"/>
+                <path stroke-width="1.6" d="M25.5 40.5 C 26.5 42.9 26.6 45.6 25.9 48"/>
+                <path stroke-width="1.6" d="M25.5 40.5 C 24 42.5 21.8 44 19.3 44.8"/>
+              </g>
+              <g fill="none" stroke="#aa5240" stroke-linecap="round">
+                <path stroke-width="1.7" d="M31.4 16.8 L 31.2 21.8"/>
+                <path stroke-width="1.7" d="M23.6 20.2 C 24.7 21.5 25.8 22.6 27.3 23.4"/>
+                <path stroke-width="1.7" d="M17.5 29.3 L 22.5 29.6"/>
+              </g>
+              <circle cx="39" cy="22.7" r="1.15" fill="#8a4237"/>
+              <path d="M18.5 15.2 C 21.8 12.4 25.8 10.6 30 10.2" fill="none" stroke="rgba(255,238,228,0.3)" stroke-width="2.6" stroke-linecap="round"/>
+            </g>
+            <path class="wsl-cline" d="M41 -2 L35 12 L43 24 L34 36 L42 50 L36 62 L40 78" fill="none" stroke="rgba(255,224,206,0.3)" stroke-width="1.5"/>
+          </g>
+        </svg>
+      </div>
+
+    </div>
+    <p class="wsl-cap">sealed with a schwimp 🦐</p>
+  </div>
+
+  <!-- ---------- the letter (text verbatim from .egg-letter) ---------- -->
+  <div class="wsl-paper">
+    <div class="wsl-paper-in">
+      <svg class="wsl-grain" aria-hidden="true">
+        <rect width="100%" height="100%" filter="url(#wsl-grainF)"></rect>
+      </svg>
+      <div class="wsl-paper-scroll">
+        <p class="wsl-eyebrow wsl-line">You found the secret 💌</p>
+        <div class="wsl-body">
+          <p class="wsl-line" style="--wsl-d:0s">Sam — of course you found this. You're the smart one.</p>
+          <p class="wsl-line" style="--wsl-d:0.4s">I wanted one little corner of this page to be just for you,
+             away from everyone else. So here it is, just between us:
+             you are the best thing that has ever happened to me. You make
+             the ordinary days my favourite days, and every plan better
+             just by being in it.</p>
+          <p class="wsl-line" style="--wsl-d:0.8s">However many birthdays we get to celebrate, I'll spend every
+             single one trying to make you feel as loved as you make me feel.</p>
+          <p class="wsl-line" style="--wsl-d:1.2s">Happy birthday, my schwimp. I love you more than all the
+             shrimps in the sea.</p>
+          <div class="wsl-sig wsl-line" style="--wsl-d:1.5s">
+            <p class="signature wsl-signature">— your Johnathan 🦐💕</p>
+            <svg class="wsl-flourish" viewBox="0 0 190 26" aria-hidden="true">
+              <path class="wsl-fmain" pathLength="1" d="M10 15 C 58 21 122 19 180 9" fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round"/>
+              <path class="wsl-fgold" d="M150 19 C 158 23 166 21 165 14" fill="none" stroke="#caa04c" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="0.01 4"/>
+              <circle class="wsl-fgold" cx="167" cy="12.5" r="1.6" fill="#c79a3f"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- ==================== /wsl- sealed-letter ==================== -->
     </div>
   </div>
 
@@ -2165,6 +2691,7 @@
     if (/^s(ch|h)?w+imp(y|s|ies)?$/.test(guess)) {
       eggGate.classList.remove('show');
       eggOverlay.classList.add('show');
+      SealedLetter.open();
       petalBurst();
     } else {
       const card = eggGate.querySelector('.modal-card');
@@ -2578,6 +3105,93 @@
   } else {
     shlInit();
   }
+})();
+/* ==================== wsl- sealed-letter ====================
+   window.SealedLetter = {
+     open()    -> (re)plays the whole choreography from the sealed
+                  state; idempotent — safe to call on every reopen.
+                  (open({ holdAt: 'sealed'|'crack'|'open'|'out'|'read' })
+                   stops after that stage — used by demos/tests only.)
+     finish()  -> jump straight to the final, fully-readable state.
+   }
+   Tapping anywhere inside the modal mid-sequence == finish().
+   prefers-reduced-motion: open() lands on the final state instantly. */
+(function () {
+  'use strict';
+  var STAGES = ['wsl-in', 'wsl-crack', 'wsl-open', 'wsl-out', 'wsl-read', 'wsl-done'];
+  var TIMES  = [0, 480, 880, 1180, 1320, 3700];
+  var ALIAS  = { sealed: 'wsl-in', crack: 'wsl-crack', open: 'wsl-open', out: 'wsl-out', read: 'wsl-read' };
+  var root = null;
+  var timers = [];
+
+  function el() {
+    if (!root) root = document.getElementById('wsl');
+    return root;
+  }
+  function reduced() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  function clearTimers() {
+    for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]);
+    timers = [];
+  }
+  function playing() {
+    var r = el();
+    return !!r && r.classList.contains('wsl-in') && !r.classList.contains('wsl-done');
+  }
+
+  /* jump to the final state (also the skip + reduced-motion path) */
+  function finish() {
+    var r = el();
+    if (!r) return;
+    clearTimers();
+    r.classList.add('wsl-skip');
+    for (var i = 0; i < STAGES.length; i++) r.classList.add(STAGES[i]);
+  }
+
+  /* back to sealed, with transitions muted so nothing animates backwards */
+  function reset() {
+    var r = el();
+    clearTimers();
+    r.classList.add('wsl-skip');
+    for (var i = 0; i < STAGES.length; i++) r.classList.remove(STAGES[i]);
+    void r.offsetWidth;
+    r.classList.remove('wsl-skip');
+    void r.offsetWidth;
+  }
+
+  function open(opts) {
+    var r = el();
+    if (!r) return;
+    reset();
+    if (reduced()) { finish(); return; }
+    var holdClass = opts && opts.holdAt ? ALIAS[String(opts.holdAt)] : null;
+    var last = holdClass ? STAGES.indexOf(holdClass) : STAGES.length - 1;
+    for (var i = 0; i <= last; i++) {
+      (function (cls, t) {
+        if (t === 0) { r.classList.add(cls); return; }
+        timers.push(setTimeout(function () { r.classList.add(cls); }, t));
+      })(STAGES[i], TIMES[i]);
+    }
+  }
+
+  /* skip affordance: any tap inside the modal completes the sequence */
+  function bind() {
+    var r = el();
+    if (!r || r.__wslBound) return;
+    r.__wslBound = true;
+    var target = r.closest('.modal') || r;
+    target.addEventListener('click', function () {
+      if (playing()) finish();
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind);
+  } else {
+    bind();
+  }
+
+  window.SealedLetter = { open: open, finish: finish };
 })();
 </script>
 </body>
