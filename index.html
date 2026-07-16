@@ -571,36 +571,145 @@
     height: 8px;
     background: #6d4c41;
   }
-  .flame {
-    position: absolute;
-    top: -28px;
-    left: 50%;
-    width: 16px;
-    height: 22px;
-    transform: translateX(-50%);
-    transform-origin: bottom center;
-    background: radial-gradient(circle at 50% 70%, #fff59d 0%, #ffd54f 40%, #ff9800 100%);
-    border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
-    box-shadow: 0 0 18px 6px rgba(255, 167, 38, 0.55);
-    animation: flicker 0.3s ease-in-out infinite alternate;
+/* ==================== cf- candle flames ==================== */
+/* SVG flame mounted inside each .candle (position:relative).
+   Flame base sits at the wick tip (y=84 of the 44x90 viewBox, svg top:-90px => base at -6px,
+   matching the old CSS flame's seat). Also enlarges the tap target above the candle. */
+.cf-flame {
+  position: absolute;
+  top: -90px;
+  left: 50%;
+  margin-left: -22px;
+  width: 44px;
+  height: 90px;
+  overflow: visible;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 3;
+}
+
+/* ---- lit state: organic wobble + glow flicker ---- */
+.cf-wob {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cf-wobble var(--cf-sw, 2.3s) ease-in-out infinite;
+  animation-delay: var(--cf-dw, 0s);
+}
+@keyframes cf-wobble {
+  0%, 100% { transform: skewX(0deg) scale(1, 1); }
+  22%      { transform: skewX(-2.6deg) scale(0.972, 1.05); }
+  38%      { transform: skewX(1.6deg)  scale(1.02, 0.965); }
+  55%      { transform: skewX(-1.1deg) scale(0.985, 1.065); }
+  72%      { transform: skewX(2.4deg)  scale(1.012, 0.98); }
+  86%      { transform: skewX(-1.8deg) scale(0.994, 1.032); }
+}
+.cf-core {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cf-corepulse 0.42s ease-in-out infinite alternate;
+  animation-delay: var(--cf-dc, 0s);
+}
+@keyframes cf-corepulse {
+  from { transform: scale(1.05, 0.93); }
+  to   { transform: scale(0.93, 1.1); }
+}
+.cf-glow {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  opacity: 0.85;
+  animation: cf-glowflick var(--cf-sg, 1.9s) ease-in-out infinite;
+  animation-delay: var(--cf-dg, 0s);
+}
+@keyframes cf-glowflick {
+  0%, 100% { opacity: 0.8;  transform: scale(1); }
+  25%      { opacity: 1;    transform: scale(1.07); }
+  52%      { opacity: 0.66; transform: scale(0.95); }
+  76%      { opacity: 0.92; transform: scale(1.04); }
+}
+
+/* ---- hidden-until-blowout actors ---- */
+.cf-spark-flash,
+.cf-ember {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.cf-smoke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  opacity: 0;
+}
+
+/* ---- blow-out choreography (~1.6s total), triggered by .cf-out on the svg ----
+   0-250ms   flame stretches tall + thin, leaning as if blown, fades at the tip
+   200-750ms bright spark flash at the wick
+   280ms-1.5s spark settles into a faint ember dot (persists)
+   300ms-1.6s smoke wisp draws itself upward (dashoffset), drifts and fades */
+.cf-out .cf-wob {
+  animation: cf-stretch 0.25s cubic-bezier(0.55, 0.06, 0.68, 0.19) 0s 1 forwards;
+}
+@keyframes cf-stretch {
+  0%   { transform: skewX(0deg) scale(1, 1);        opacity: 1; }
+  45%  { transform: skewX(5deg) scale(0.6, 1.3);    opacity: 1; }
+  85%  { transform: skewX(8deg) scale(0.22, 1.72);  opacity: 0.85; }
+  100% { transform: skewX(9deg) scale(0.1, 1.85);   opacity: 0; }
+}
+.cf-out .cf-core { animation: none; }
+.cf-out .cf-glow {
+  animation: cf-glowout 0.3s ease-out 0s 1 forwards;
+}
+@keyframes cf-glowout {
+  0%   { opacity: 0.85; transform: scale(1); }
+  100% { opacity: 0;    transform: scale(0.55); }
+}
+.cf-out .cf-spark-flash {
+  animation: cf-flash 0.55s ease-out 0.2s 1 both;
+}
+@keyframes cf-flash {
+  0%   { opacity: 0;   transform: scale(0.25); }
+  16%  { opacity: 1;   transform: scale(1.4); }
+  32%  { opacity: 0.9; transform: scale(0.8); }
+  100% { opacity: 0;   transform: scale(0.3); }
+}
+.cf-out .cf-ember {
+  animation: cf-emberset 1.25s ease-out 0.28s 1 both;
+}
+@keyframes cf-emberset {
+  0%   { opacity: 0;    transform: scale(1.5); }
+  12%  { opacity: 0.95; transform: scale(1.2); }
+  100% { opacity: 0.4;  transform: scale(0.85); }
+}
+.cf-out .cf-smoke {
+  animation: cf-smokewisp 1.28s cubic-bezier(0.35, 0.25, 0.45, 1) 0.3s 1 both;
+}
+@keyframes cf-smokewisp {
+  0%   { stroke-dashoffset: 100; opacity: 0;    transform: translate(0, 0); }
+  10%  { opacity: 0.75; }
+  55%  { stroke-dashoffset: 6;   opacity: 0.6;  transform: translate(-0.5px, -6px); }
+  100% { stroke-dashoffset: -72; opacity: 0;    transform: translate(-1.5px, -16px); }
+}
+
+/* ---- done state (reduced-motion blow-out, applied instantly by JS) ---- */
+.cf-done .cf-wob,
+.cf-done .cf-glow,
+.cf-done .cf-spark-flash,
+.cf-done .cf-smoke {
+  animation: none !important;
+  opacity: 0 !important;
+}
+.cf-done .cf-ember {
+  animation: none !important;
+  opacity: 0.4 !important;
+}
+
+/* ---- reduced motion: static flame, no looping animation ---- */
+@media (prefers-reduced-motion: reduce) {
+  .cf-wob, .cf-core, .cf-glow, .cf-spark-flash, .cf-ember, .cf-smoke {
+    animation: none !important;
   }
-  @keyframes flicker {
-    from { transform: translateX(-50%) scale(1) rotate(-4deg); }
-    to   { transform: translateX(-50%) scale(1.12, 1.25) rotate(4deg); }
-  }
-  .smoke {
-    position: absolute;
-    top: -24px;
-    left: 50%;
-    font-size: 16px;
-    transform: translateX(-50%);
-    animation: smokeUp 1.6s ease-out forwards;
-    pointer-events: none;
-  }
-  @keyframes smokeUp {
-    from { transform: translateX(-50%) translateY(0); opacity: 0.9; }
-    to   { transform: translateX(-50%) translateY(-44px); opacity: 0; }
-  }
+  .cf-out .cf-wob, .cf-out .cf-glow, .cf-out .cf-spark-flash, .cf-out .cf-smoke { opacity: 0; }
+  .cf-out .cf-ember { opacity: 0.4; }
+}
   .cake {
     width: min(300px, 80vw);
     position: relative;
@@ -1073,11 +1182,11 @@
     </header>
     <div class="cake-wrap">
       <div class="candles">
-        <div class="candle"><div class="flame"></div></div>
-        <div class="candle"><div class="flame"></div></div>
-        <div class="candle"><div class="flame"></div></div>
-        <div class="candle"><div class="flame"></div></div>
-        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"></div>
+        <div class="candle"></div>
+        <div class="candle"></div>
+        <div class="candle"></div>
+        <div class="candle"></div>
       </div>
       <div class="cake">
         <div class="layer layer-top"></div>
@@ -1802,19 +1911,103 @@
     songBtn.textContent = '🎶 now playing: our song 💕';
   });
 
+/* ==================== cf- candle flames ====================
+   window.CandleFlame = {
+     mount(candleEl)  -> handle   (replaces any existing .flame / .cf-flame in the candle)
+     blowOut(handle)              (plays ~1.6s blow-out; instant "done" state under reduced motion)
+     isOut(handle)    -> boolean  (convenience)
+   }
+   handle = { el: <svg>, candle: <div>, out: boolean }                       */
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var uid = 0;
+
+  function prefersReduce() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function mount(candleEl) {
+    if (!candleEl) return null;
+    var old = candleEl.querySelector('.flame');
+    if (old) old.remove();
+    var prev = candleEl.querySelector('.cf-flame');
+    if (prev) prev.remove();
+
+    var n = ++uid;
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'cf-flame');
+    svg.setAttribute('viewBox', '0 0 44 90');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.innerHTML =
+      '<defs>' +
+        '<radialGradient id="cf-glow' + n + '" cx="50%" cy="50%" r="50%">' +
+          '<stop offset="0%" stop-color="rgba(255,167,38,.5)"/>' +
+          '<stop offset="45%" stop-color="rgba(255,167,38,.26)"/>' +
+          '<stop offset="100%" stop-color="rgba(255,167,38,0)"/>' +
+        '</radialGradient>' +
+        '<radialGradient id="cf-body' + n + '" cx="50%" cy="72%" r="62%">' +
+          '<stop offset="0%" stop-color="#ffd54f"/>' +
+          '<stop offset="55%" stop-color="#ffbf3d"/>' +
+          '<stop offset="100%" stop-color="#ff9800"/>' +
+        '</radialGradient>' +
+        '<radialGradient id="cf-corg' + n + '" cx="50%" cy="68%" r="60%">' +
+          '<stop offset="0%" stop-color="#fffdf0"/>' +
+          '<stop offset="60%" stop-color="#fff7c9"/>' +
+          '<stop offset="100%" stop-color="#ffeb9e"/>' +
+        '</radialGradient>' +
+        '<radialGradient id="cf-sprk' + n + '" cx="50%" cy="50%" r="50%">' +
+          '<stop offset="0%" stop-color="#fff7c9"/>' +
+          '<stop offset="45%" stop-color="rgba(255,213,79,.85)"/>' +
+          '<stop offset="100%" stop-color="rgba(255,152,0,0)"/>' +
+        '</radialGradient>' +
+      '</defs>' +
+      '<ellipse class="cf-glow" cx="22" cy="70" rx="14" ry="15" fill="url(#cf-glow' + n + ')"/>' +
+      '<g transform="translate(22 84)">' +
+        '<path class="cf-smoke" d="M0 -4 C -4.5 -12 3.5 -17 0.8 -25 C -1.6 -32 -4.8 -36 -2 -43 C -0.4 -47 3.6 -48.5 5 -45.5" pathLength="100" fill="none" stroke="#a1938c" stroke-width="1.7" stroke-linecap="round"/>' +
+        '<g class="cf-wob">' +
+          '<path class="cf-outer" d="M0 0 C -6.6 -1.8 -8 -8.5 -6.2 -14.5 C -4.6 -19.8 -2 -22.8 0 -26 C 2 -22.8 4.6 -19.8 6.2 -14.5 C 8 -8.5 6.6 -1.8 0 0 Z" fill="url(#cf-body' + n + ')"/>' +
+          '<path class="cf-core" d="M0 -1 C -3.4 -2.2 -4.3 -6 -3.3 -9 C -2.4 -11.6 -1 -12.6 0 -14 C 1 -12.6 2.4 -11.6 3.3 -9 C 4.3 -6 3.4 -2.2 0 -1 Z" fill="url(#cf-corg' + n + ')"/>' +
+        '</g>' +
+        '<g transform="translate(0 -1)">' +
+          '<circle class="cf-spark-flash" r="5" fill="url(#cf-sprk' + n + ')"/>' +
+          '<circle class="cf-ember" r="1.3" fill="#ff7a45"/>' +
+        '</g>' +
+      '</g>';
+
+    /* desynchronize the five candles' flicker */
+    svg.style.setProperty('--cf-dw', (-(Math.random() * 2.4)).toFixed(2) + 's');
+    svg.style.setProperty('--cf-sw', (2.05 + Math.random() * 0.7).toFixed(2) + 's');
+    svg.style.setProperty('--cf-dg', (-(Math.random() * 1.9)).toFixed(2) + 's');
+    svg.style.setProperty('--cf-sg', (1.7 + Math.random() * 0.6).toFixed(2) + 's');
+    svg.style.setProperty('--cf-dc', (-(Math.random() * 0.4)).toFixed(2) + 's');
+
+    candleEl.appendChild(svg);
+    return { el: svg, candle: candleEl, out: false };
+  }
+
+  function blowOut(handle) {
+    if (!handle || handle.out || !handle.el) return;
+    handle.out = true;
+    handle.el.classList.add(prefersReduce() ? 'cf-done' : 'cf-out');
+  }
+
+  function isOut(handle) {
+    return !!(handle && handle.out);
+  }
+
+  window.CandleFlame = { mount: mount, blowOut: blowOut, isOut: isOut };
+})();
+
   // ---------- birthday cake candles ----------
   let candlesOut = 0;
   const wishMsg = document.getElementById('wishMsg');
   document.querySelectorAll('.candle').forEach((candle) => {
+    const flame = CandleFlame.mount(candle);
     candle.addEventListener('click', () => {
-      const flame = candle.querySelector('.flame');
-      if (!flame) return;
-      flame.remove();
-      const smoke = document.createElement('div');
-      smoke.className = 'smoke';
-      smoke.textContent = '💨';
-      candle.appendChild(smoke);
-      setTimeout(() => smoke.remove(), 1600);
+      if (CandleFlame.isOut(flame)) return;
+      CandleFlame.blowOut(flame);
       candlesOut++;
       if (candlesOut === 5) {
         wishMsg.textContent = 'yayyy!! did you make a wish, schwimp? 🌠💕';
