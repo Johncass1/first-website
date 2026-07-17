@@ -3730,7 +3730,7 @@ button.wsl-close:hover { transform: scale(1.08); }
     const spaGift = document.getElementById('spaGift');
     const spaImg = document.getElementById('spaImg');
     if (!spaBtn || !spaGift || !spaImg) return;
-    const SRC = 'photos/spa-certificate.jpg';
+    const SRC = 'photos/spa-certificate.png';
     const pre = new Image();
     pre.onload = () => { spaImg.src = SRC; spaBtn.classList.add('ready'); };
     pre.onerror = () => { /* file not added yet — keep the whole reveal hidden */ };
