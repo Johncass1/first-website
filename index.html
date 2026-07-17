@@ -53,29 +53,189 @@
 .pw-layer-ambient { z-index: 5; transition: opacity 1.4s ease; }
 .pw-layer-burst   { z-index: 120; }
 
-  /* ---------- floating critters ---------- */
-  .critter {
-    position: fixed;
-    font-size: 34px;
-    cursor: pointer;
-    z-index: 20;
-    user-select: none;
-    -webkit-user-select: none;
-    animation: floaty ease-in-out infinite alternate;
-    filter: drop-shadow(0 4px 6px rgba(194, 24, 91, 0.2));
-  }
-  @keyframes floaty {
-    from { transform: translate(0, 0) rotate(-8deg); }
-    to   { transform: translate(30px, -40px) rotate(8deg); }
-  }
-  .critter-inner { display: inline-block; }
-  .critter-inner.boing { animation: boing 0.7s ease; }
-  @keyframes boing {
-    0%   { transform: scale(1) rotate(0deg); }
-    35%  { transform: scale(1.6) rotate(-20deg); }
-    65%  { transform: scale(1.3) rotate(380deg); }
-    100% { transform: scale(1) rotate(360deg); }
-  }
+/* ================================================================
+   cc- : critters — hand-drawn SVG committee (shrimp / bee / rat)
+   Tokens: terracotta #c56f5e·#dd8f77·#ecb7a4 · gold #caa04c/#f1d2b2
+           taupe #a98b6f · warm gray #8b7360 · pink #ffb6cf
+   ================================================================ */
+
+/* ---------- base critter: hit area >= 48x48, centred art ---------- */
+.cc-critter {
+  position: relative;
+  min-width: 48px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  outline: none;
+}
+.cc-critter:focus-visible { outline: 2px dashed #c56f5e; outline-offset: 4px; border-radius: 12px; }
+.cc-move, .cc-fig8, .cc-react { display: block; will-change: transform; }
+.cc-svg {
+  display: block;
+  height: 46px;
+  width: auto;
+  overflow: visible;
+  filter: drop-shadow(0 3px 4px rgba(138, 59, 92, 0.18));
+}
+/* the wide rat gets its whiskers/tail room */
+.cc-rat .cc-svg { height: 44px; }
+
+/* ================================================================
+   species idle motion (battery-friendly: transform/opacity only)
+   ================================================================ */
+
+/* ---------- bee: figure-8 hover (X on .cc-move, Y at 2x freq on
+   .cc-fig8 = Lissajous) + fast wing flutter ---------- */
+.cc-bee .cc-move { animation: cc-hov-x 3.6s ease-in-out infinite alternate; }
+.cc-bee .cc-fig8 { animation: cc-hov-y 1.8s ease-in-out infinite alternate; }
+@keyframes cc-hov-x { from { transform: translateX(-6px) rotate(-3deg); } to { transform: translateX(6px) rotate(3deg); } }
+@keyframes cc-hov-y { from { transform: translateY(-4px); } to { transform: translateY(4px); } }
+.cc-wing {
+  transform-box: fill-box;
+  transform-origin: 80% 95%;
+  animation: cc-flutter 0.16s ease-in-out infinite alternate;
+}
+.cc-wing-r { transform-origin: 30% 100%; animation-delay: -0.08s; }
+@keyframes cc-flutter {
+  from { transform: rotate(-13deg); opacity: 0.55; }
+  to   { transform: rotate(9deg);   opacity: 1; }
+}
+
+/* ---------- shrimp: slow vertical drift + tail curl every few s ---------- */
+.cc-shrimp .cc-move { animation: cc-drift 4.4s ease-in-out infinite alternate; }
+@keyframes cc-drift { from { transform: translateY(-5px) rotate(-2deg); } to { transform: translateY(5px) rotate(2deg); } }
+.cc-shrimp-tail {
+  transform-box: fill-box;
+  transform-origin: 88% 8%;
+  animation: cc-tail-curl 5.2s ease-in-out infinite;
+}
+@keyframes cc-tail-curl {
+  0%, 55%, 100% { transform: rotate(0deg); }
+  63%           { transform: rotate(-34deg); }
+  72%           { transform: rotate(-22deg); }
+  82%           { transform: rotate(0deg); }
+}
+
+/* ---------- rat: scurry dash, pause, nose twitch, dash back ---------- */
+.cc-rat .cc-move { animation: cc-scurry 7.5s ease-in-out infinite; }
+@keyframes cc-scurry {
+  0%, 46%        { transform: translateX(0); }
+  6%             { transform: translateX(-16px); }
+  10%, 40%       { transform: translateX(-14px); }
+  52%, 100%      { transform: translateX(0); }
+}
+.cc-rat-nose {
+  transform-box: fill-box;
+  transform-origin: 85% 50%;
+  animation: cc-twitch 3.8s ease-in-out infinite;
+}
+@keyframes cc-twitch {
+  0%, 78%, 92%, 100% { transform: rotate(0deg); }
+  81%                { transform: rotate(4deg) translateY(-0.5px); }
+  84%                { transform: rotate(-3deg); }
+  88%                { transform: rotate(3.5deg); }
+}
+.cc-rat-tail {
+  transform-box: fill-box;
+  transform-origin: 5% 80%;
+  animation: cc-tail-sway 5.6s ease-in-out infinite alternate;
+}
+@keyframes cc-tail-sway { from { transform: rotate(-4deg); } to { transform: rotate(6deg); } }
+
+/* ================================================================
+   tap reactions (on .cc-react only — idle wrappers keep looping)
+   ================================================================ */
+.cc-do-flip { animation: cc-backflip 0.9s cubic-bezier(0.34, 0.2, 0.42, 1) both; }
+@keyframes cc-backflip {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  25%  { transform: translate(-7px, -26px) rotate(-180deg); }
+  50%  { transform: translate(0, -34px) rotate(-360deg); }
+  75%  { transform: translate(7px, -24px) rotate(-540deg); }
+  100% { transform: translate(0, 0) rotate(-720deg); }
+}
+.cc-do-buzz { animation: cc-zigzag 0.7s ease-in-out both; }
+@keyframes cc-zigzag {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  14%  { transform: translate(-9px, -5px) rotate(-16deg) scale(1.06); }
+  30%  { transform: translate(8px, -10px) rotate(14deg); }
+  46%  { transform: translate(-8px, 3px) rotate(-13deg); }
+  62%  { transform: translate(7px, -6px) rotate(11deg); }
+  80%  { transform: translate(-4px, 1px) rotate(-6deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.cc-do-spin { animation: cc-ratspin 0.7s cubic-bezier(0.35, 0.1, 0.3, 1) both; }
+@keyframes cc-ratspin {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(70deg) scale(1.1); }
+  80%  { transform: rotate(345deg) scale(1.05); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.cc-do-pop { animation: cc-pop 0.35s ease both; }
+@keyframes cc-pop { 50% { transform: scale(1.2); } }
+
+/* ================================================================
+   corner floaters: fixed, z-index 20 (same layer as old .critter)
+   ================================================================ */
+.cc-floater {
+  position: fixed;
+  z-index: 20;
+  animation: cc-float 6s ease-in-out infinite alternate;
+}
+.cc-floater-tl { top: 14px; left: 10px; }
+.cc-floater-tr { top: 18px; right: 10px; }
+@keyframes cc-float {
+  from { transform: translateY(0) rotate(-3deg); }
+  to   { transform: translateY(9px) rotate(3deg); }
+}
+
+/* ================================================================
+   parade divider: in-flow band with dotted garden path
+   ================================================================ */
+.cc-parade {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  height: 90px;
+  margin: 0 auto;
+  overflow: visible;
+  z-index: 10; /* in-flow, same plane as sections */
+}
+.cc-parade-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+.cc-parade-slot {
+  position: absolute;
+  transform: translateX(-50%);
+  animation: cc-parade-bob 2.8s ease-in-out infinite;
+}
+@keyframes cc-parade-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-7px); }
+}
+
+/* ================================================================
+   prefers-reduced-motion: static poses, pop-only reaction
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .cc-bee .cc-move, .cc-bee .cc-fig8, .cc-wing,
+  .cc-shrimp .cc-move, .cc-shrimp-tail,
+  .cc-rat .cc-move, .cc-rat-nose, .cc-rat-tail,
+  .cc-floater, .cc-parade-slot,
+  .cc-do-flip, .cc-do-buzz, .cc-do-spin { animation: none !important; }
+  .cc-wing { opacity: 0.85; }
+  .cc-do-pop { animation: cc-pop 0.35s ease both !important; }
+}
   .bubble {
     position: fixed;
     background: #fff;
@@ -3011,33 +3171,278 @@ button.wsl-close:hover { transform: scale(1.08); }
     '🐀': ['squeak squeak!! 🐀', '*steals your food*', 'rat says happy birthday!!'],
     '🦐': ['schwimp!!! 🦐', 'schwimp schwimp 💕', '*does a tiny backflip*'],
   };
-  const critters = ['🐝', '🐀', '🦐', '🐝', '🦐', '🐀', '🦐', '🐝'];
-  critters.forEach((c, i) => {
-    const el = document.createElement('div');
-    el.className = 'critter';
-    const inner = document.createElement('span');
-    inner.className = 'critter-inner';
-    inner.textContent = c;
-    el.appendChild(inner);
-    el.style.left = (5 + Math.random() * 85) + 'vw';
-    el.style.top = (8 + Math.random() * 80) + 'vh';
-    el.style.animationDuration = (3 + Math.random() * 3) + 's';
-    el.style.animationDelay = -Math.random() * 3 + 's';
-    el.addEventListener('click', () => {
-      inner.classList.remove('boing');
-      void inner.offsetWidth; // restart animation
-      inner.classList.add('boing');
-      const sounds = critterSounds[c];
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.textContent = sounds[Math.floor(Math.random() * sounds.length)];
-      const rect = el.getBoundingClientRect();
-      bubble.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
-      bubble.style.top = (rect.top - 40) + 'px';
-      document.body.appendChild(bubble);
-      setTimeout(() => bubble.remove(), 1500);
+/* ================================================================
+   cc- : critters — hand-drawn SVG committee members
+   (terracotta shrimp · gold bumblebee · warm-gray rat)
+   Replaces the floating-emoji critters. Exposes window.Critters:
+     Critters.floater(species, {corner:'tl'|'tr'}) -> el (SELF-APPENDING to body)
+     Critters.parade() -> el (in-flow divider band; caller inserts it)
+     Critters.onTap(cb) -> cb(species, el) fires on every tap reaction
+   species: 'shrimp' | 'bee' | 'rat'
+   ================================================================ */
+(function () {
+  'use strict';
+
+  var uid = 0; // unique suffix for per-instance SVG defs (clipPaths)
+  var tapCbs = [];
+  var floaters = { tl: null, tr: null };
+
+  function reduced() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  /* ---------------------------------------------------------------
+     THE DRAWINGS
+     2px-ish round-cap strokes + soft translucent wash fills,
+     same language as the site's drawn petals/flourishes.
+     --------------------------------------------------------------- */
+
+  /* ---------- terracotta shrimp (big head, curled abdomen, fan tail) ---------- */
+  function shrimpSVG() {
+    return '' +
+    '<svg class="cc-svg" viewBox="0 0 68 64" aria-hidden="true">' +
+      /* curled abdomen (crescent behind the head) */
+      '<path d="M 30 12 C 46 6 60 16 59 30 C 58 42 50 51 38 53 C 34 53.6 31 52 30 49 C 36 48 41 44 43 38 C 45 30 41 20 30 12 Z"' +
+        ' fill="#ecb7a4" fill-opacity="0.55" stroke="#c56f5e" stroke-width="2.2" stroke-linejoin="round"/>' +
+      /* segment lines across the crescent */
+      '<path d="M 46 13 C 45.5 17 44 21 41 24" fill="none" stroke="#c56f5e" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.6"/>' +
+      '<path d="M 55 22 C 52 26 49 29 45 30.5" fill="none" stroke="#c56f5e" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.6"/>' +
+      '<path d="M 58 34 C 54 36 50 37 46 37" fill="none" stroke="#c56f5e" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.6"/>' +
+      '<path d="M 52 45 C 49 43 46.5 41 45 38.5" fill="none" stroke="#c56f5e" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.6"/>' +
+      /* fan tail tucked under the belly (curls/uncurls) */
+      '<g class="cc-shrimp-tail">' +
+        '<path d="M 32 50 C 27 48.5 21.5 49.5 18 53 C 22 56 28 55.5 31.5 53 Z" fill="#dd8f77" fill-opacity="0.4" stroke="#c56f5e" stroke-width="1.8" stroke-linejoin="round"/>' +
+        '<path d="M 33 51 C 29 53 26.5 56.5 26.5 61 C 31 60 34 56.5 34.5 52.5 Z" fill="#dd8f77" fill-opacity="0.4" stroke="#c56f5e" stroke-width="1.8" stroke-linejoin="round"/>' +
+      '</g>' +
+      /* big round head on top */
+      '<path d="M 30 12 C 18 10 9 18 9 29 C 9 40 18 48 29 48 C 38 48 44 42 44 34 C 44 25 39 16 30 12 Z"' +
+        ' fill="#f1c4b1" fill-opacity="0.75" stroke="#c56f5e" stroke-width="2.2" stroke-linejoin="round"/>' +
+      /* antennae sweeping back-left */
+      '<path d="M 16 16 C 9 10 4 10 2 15" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<path d="M 13 19 C 6 16 2 19 1 25" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>' +
+      /* little swimming legs under the chin */
+      '<path d="M 14 44 C 13 48 11 50 8 51" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<path d="M 18 47 C 17 51 15 53 12 54" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<path d="M 23 49 C 22.5 53 21 55 18 56.5" fill="none" stroke="#c56f5e" stroke-width="1.5" stroke-linecap="round"/>' +
+      /* face */
+      '<circle cx="22" cy="27" r="3.4" fill="#8a4a3c"/>' +
+      '<circle cx="23.1" cy="25.9" r="1.1" fill="#fff"/>' +
+      '<ellipse cx="15.5" cy="33.5" rx="2.8" ry="1.9" fill="#ffb6cf" fill-opacity="0.8"/>' +
+      '<path d="M 24.5 33 Q 27.5 35.5 30.5 33.5" fill="none" stroke="#8a4a3c" stroke-width="1.5" stroke-linecap="round"/>' +
+    '</svg>';
+  }
+
+  /* ---------- gold-striped bumblebee (round + fuzzy + cheerful) ---------- */
+  function beeSVG() {
+    var id = 'ccb' + (++uid);
+    return '' +
+    '<svg class="cc-svg" viewBox="0 0 76 64" aria-hidden="true">' +
+      '<defs><clipPath id="' + id + '"><ellipse cx="38" cy="39" rx="23" ry="16.5"/></clipPath></defs>' +
+      /* wings sweeping up-and-back from the shoulders (flutter groups) */
+      '<g class="cc-wing cc-wing-r">' +
+        '<ellipse cx="53" cy="16" rx="10" ry="5.5" transform="rotate(-34 44 24)" fill="#fff" fill-opacity="0.5" stroke="#a1782a" stroke-width="1.6" stroke-opacity="0.6"/>' +
+      '</g>' +
+      '<g class="cc-wing cc-wing-l">' +
+        '<ellipse cx="46" cy="13" rx="11.5" ry="6.5" transform="rotate(-28 37 24)" fill="#fff" fill-opacity="0.7" stroke="#a1782a" stroke-width="1.7" stroke-opacity="0.8"/>' +
+      '</g>' +
+      /* body wash + stripes */
+      '<ellipse cx="38" cy="39" rx="23" ry="16.5" fill="#f1d2b2" fill-opacity="0.6"/>' +
+      '<g clip-path="url(#' + id + ')">' +
+        '<path d="M 45 20 C 43 32 43 45 46 58" fill="none" stroke="#caa04c" stroke-width="7" stroke-opacity="0.55"/>' +
+        '<path d="M 57 24 C 54 33 54 44 56 54" fill="none" stroke="#caa04c" stroke-width="6" stroke-opacity="0.55"/>' +
+      '</g>' +
+      /* body outline */
+      '<ellipse cx="38" cy="39" rx="23" ry="16.5" fill="none" stroke="#a1782a" stroke-width="2.2"/>' +
+      /* fuzz ticks */
+      '<path d="M 24 24 l -2 -2.5 M 33 21.5 l -1 -3 M 51 23 l 1.5 -2.5 M 26 54 l -2 2.5 M 44 56 l 0.5 3 M 57 51 l 2.5 2" fill="none" stroke="#a1782a" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.7"/>' +
+      /* stinger */
+      '<path d="M 61 41 C 65 41 68 42 70 44 C 67 45 64 45 61 44.5" fill="#caa04c" fill-opacity="0.4" stroke="#a1782a" stroke-width="1.7" stroke-linejoin="round"/>' +
+      /* antennae (head end, clear of the wings) */
+      '<path d="M 25 25 C 21 19 16 15 11 14" fill="none" stroke="#a1782a" stroke-width="1.6" stroke-linecap="round"/>' +
+      '<path d="M 31 23 C 29 17 26 12 21 9" fill="none" stroke="#a1782a" stroke-width="1.6" stroke-linecap="round"/>' +
+      '<circle cx="10" cy="13.5" r="1.7" fill="#a1782a"/>' +
+      '<circle cx="20" cy="8.5" r="1.7" fill="#a1782a"/>' +
+      /* bent legs */
+      '<path d="M 28 55 l 1 4 l 4 1.5" fill="none" stroke="#a1782a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M 37 56 l 0.5 4 l 4 1" fill="none" stroke="#a1782a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M 47 55 l 1.5 3.5 l 4 0.5" fill="none" stroke="#a1782a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+      /* face */
+      '<circle cx="27" cy="36" r="2.6" fill="#6e5427"/>' +
+      '<circle cx="27.9" cy="35.2" r="0.85" fill="#fff"/>' +
+      '<circle cx="36" cy="35" r="2.6" fill="#6e5427"/>' +
+      '<circle cx="36.9" cy="34.2" r="0.85" fill="#fff"/>' +
+      '<path d="M 28.5 41 Q 31.5 44 34.5 41.5" fill="none" stroke="#6e5427" stroke-width="1.5" stroke-linecap="round"/>' +
+      '<ellipse cx="23" cy="42" rx="2.4" ry="1.6" fill="#ffb6cf" fill-opacity="0.7"/>' +
+      '<ellipse cx="39.5" cy="41.5" rx="2.4" ry="1.6" fill="#ffb6cf" fill-opacity="0.7"/>' +
+    '</svg>';
+  }
+
+  /* ---------- warm-gray rat (round ear, pink nose, long tail) ---------- */
+  function ratSVG() {
+    return '' +
+    '<svg class="cc-svg" viewBox="0 0 84 64" aria-hidden="true">' +
+      /* tail: long curve with a curl */
+      '<g class="cc-rat-tail">' +
+        '<path d="M 64 50 C 74 53 81 48 80 40 C 79 33 73 33 72 38 C 71.5 41 74 42 76 40" fill="none" stroke="#8b7360" stroke-width="2.4" stroke-linecap="round"/>' +
+      '</g>' +
+      /* far ear hint */
+      '<circle cx="46" cy="15" r="5" fill="#d9c8b4" fill-opacity="0.7" stroke="#8b7360" stroke-width="1.6" stroke-opacity="0.5"/>' +
+      /* body + head blob (soft pointed snout at left) */
+      '<path d="M 6 37 C 10 26 21 19 34 18 C 50 16.5 66 25 69 38 C 71.5 50 60 57.5 46 57.5 C 30 57.5 11 49 6 37 Z"' +
+        ' fill="#d9c8b4" fill-opacity="0.5" stroke="#8b7360" stroke-width="2.2" stroke-linejoin="round"/>' +
+      /* big round ear */
+      '<circle cx="34" cy="14" r="8.5" fill="#f4ecdd" stroke="#8b7360" stroke-width="2.2"/>' +
+      '<circle cx="34.5" cy="14.5" r="4.2" fill="#ffb6cf" fill-opacity="0.65"/>' +
+      /* nose group (twitches): nose + whiskers + mouth */
+      '<g class="cc-rat-nose">' +
+        '<circle cx="6.5" cy="36" r="3.1" fill="#ef8fae" stroke="#8b7360" stroke-width="1.4"/>' +
+        '<path d="M 9 32.5 C 5 30 2 29.5 0 30.5" fill="none" stroke="#8b7360" stroke-width="1.3" stroke-linecap="round" stroke-opacity="0.7"/>' +
+        '<path d="M 9 35.5 C 4.5 35 1.5 35.5 0 37" fill="none" stroke="#8b7360" stroke-width="1.3" stroke-linecap="round" stroke-opacity="0.7"/>' +
+        '<path d="M 9 38.5 C 5 40 2.5 42 1 44" fill="none" stroke="#8b7360" stroke-width="1.3" stroke-linecap="round" stroke-opacity="0.7"/>' +
+        '<path d="M 8.5 40.5 Q 11.5 43.5 15 42" fill="none" stroke="#8b7360" stroke-width="1.5" stroke-linecap="round"/>' +
+      '</g>' +
+      /* eye */
+      '<circle cx="24" cy="30" r="3.5" fill="#5f4d3f"/>' +
+      '<circle cx="25.2" cy="28.8" r="1.15" fill="#fff"/>' +
+      '<ellipse cx="18" cy="38.5" rx="2.9" ry="1.9" fill="#ffb6cf" fill-opacity="0.7"/>' +
+      /* front paws + hind foot */
+      '<path d="M 27 51.5 C 27 55 29.5 56.5 32.5 55.8" fill="none" stroke="#8b7360" stroke-width="1.9" stroke-linecap="round"/>' +
+      '<path d="M 35 52.5 C 35.5 55.8 38 57 41 56.2" fill="none" stroke="#8b7360" stroke-width="1.9" stroke-linecap="round"/>' +
+      '<ellipse cx="52" cy="57" rx="6" ry="2.7" fill="#f4ecdd" stroke="#8b7360" stroke-width="1.7"/>' +
+    '</svg>';
+  }
+
+  var art = { shrimp: shrimpSVG, bee: beeSVG, rat: ratSVG };
+  var labels = {
+    shrimp: 'a little drawn shrimp — tap it',
+    bee: 'a little drawn bumblebee — tap it',
+    rat: 'a little drawn rat — tap it',
+  };
+
+  /* ---------------------------------------------------------------
+     critter element factory
+     structure: .cc-critter (hit area >=48px)
+                  > .cc-move  (species idle: drift / scurry / fig-8 X)
+                    > .cc-fig8 (bee only: fig-8 Y)
+                      > .cc-react (tap reaction lives here alone)
+                        > svg
+     --------------------------------------------------------------- */
+  function makeCritter(species) {
+    if (!art[species]) throw new Error('Critters: unknown species ' + species);
+    var el = document.createElement('div');
+    el.className = 'cc-critter cc-' + species;
+    el.dataset.species = species;
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', labels[species]);
+    el.innerHTML =
+      '<div class="cc-move"><div class="cc-fig8"><div class="cc-react">' +
+      art[species]() +
+      '</div></div></div>';
+
+    function fire() { react(species, el); }
+    el.addEventListener('click', fire);
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fire(); }
     });
+    return el;
+  }
+
+  var reactCls = { shrimp: 'cc-do-flip', bee: 'cc-do-buzz', rat: 'cc-do-spin' };
+  var reactMs  = { shrimp: 950, bee: 750, rat: 750 };
+
+  function react(species, el) {
+    var r = el.querySelector('.cc-react');
+    if (r) {
+      var cls = reduced() ? 'cc-do-pop' : reactCls[species];
+      r.classList.remove('cc-do-pop', 'cc-do-flip', 'cc-do-buzz', 'cc-do-spin');
+      void r.offsetWidth; /* restart */
+      r.classList.add(cls);
+      var done = function (e) {
+        if (e && e.target !== r) return; /* ignore inner (wing/tail) animations */
+        r.classList.remove(cls);
+        r.removeEventListener('animationend', done);
+        clearTimeout(t);
+      };
+      r.addEventListener('animationend', done);
+      var t = setTimeout(function () { done(); }, (reduced() ? 400 : reactMs[species]) + 250);
+    }
+    for (var i = 0; i < tapCbs.length; i++) {
+      try { tapCbs[i](species, el); } catch (err) { /* keep the party going */ }
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     corner floaters (fixed, z-index 20, max two: one per corner).
+     SELF-APPENDING to document.body; also returned.
+     --------------------------------------------------------------- */
+  function floater(species, opts) {
+    var corner = (opts && opts.corner) === 'tr' ? 'tr' : 'tl';
+    if (floaters[corner]) floaters[corner].remove();
+    var el = makeCritter(species);
+    el.classList.add('cc-floater', 'cc-floater-' + corner);
     document.body.appendChild(el);
+    floaters[corner] = el;
+    return el;
+  }
+
+  /* ---------------------------------------------------------------
+     parade divider: dotted garden path + three bobbing critters.
+     Returned NOT appended — caller inserts between sections.
+     --------------------------------------------------------------- */
+  function parade() {
+    var band = document.createElement('div');
+    band.className = 'cc-parade';
+    band.setAttribute('aria-label', 'the committee parades by: a shrimp, a bumblebee and a rat');
+    band.innerHTML =
+      '<svg class="cc-parade-path" viewBox="0 0 720 90" preserveAspectRatio="none" aria-hidden="true">' +
+        '<path d="M -12 64 C 120 46 240 76 360 60 C 480 44 600 74 732 54"' +
+          ' fill="none" stroke="#a98b6f" stroke-width="3" stroke-linecap="round"' +
+          ' stroke-dasharray="0.5 12" stroke-opacity="0.7"/>' +
+      '</svg>';
+    var slots = [
+      { sp: 'shrimp', left: '13%', bottom: '26px', delay: '0s'    },
+      { sp: 'bee',    left: '45%', bottom: '34px', delay: '-0.9s' },
+      { sp: 'rat',    left: '75%', bottom: '24px', delay: '-1.7s' },
+    ];
+    for (var i = 0; i < slots.length; i++) {
+      var s = slots[i];
+      var slot = document.createElement('div');
+      slot.className = 'cc-parade-slot';
+      slot.style.left = s.left;
+      slot.style.bottom = s.bottom;
+      slot.style.animationDelay = s.delay;
+      slot.appendChild(makeCritter(s.sp));
+      band.appendChild(slot);
+    }
+    return band;
+  }
+
+  function onTap(cb) { if (typeof cb === 'function') tapCbs.push(cb); }
+
+  /* make(species): bare tappable critter element (bonus helper) */
+  window.Critters = { floater: floater, parade: parade, onTap: onTap, make: makeCritter };
+})();
+
+  // ---------- drawn critters: corner floaters, parades, bubble gag ----------
+  Critters.floater('bee', { corner: 'tl' });
+  Critters.floater('shrimp', { corner: 'tr' });
+  ['.letter', '.gallery', '.reasons'].forEach((sel) => {
+    const host = document.querySelector(sel);
+    const section = host && host.closest('section');
+    if (section) section.insertAdjacentElement('afterend', Critters.parade());
+  });
+  Critters.onTap((species, el) => {
+    const key = species === 'bee' ? '🐝' : species === 'rat' ? '🐀' : '🦐';
+    const sounds = critterSounds[key];
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = sounds[Math.floor(Math.random() * sounds.length)];
+    const rect = el.getBoundingClientRect();
+    bubble.style.left = Math.min(rect.left, window.innerWidth - 180) + 'px';
+    bubble.style.top = (rect.top - 40) + 'px';
+    document.body.appendChild(bubble);
+    setTimeout(() => bubble.remove(), 1500);
   });
 
   // ---------- reasons flip cards ----------
