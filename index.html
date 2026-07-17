@@ -908,26 +908,230 @@
     transition: transform 0.15s ease;
   }
   .song-btn:hover { transform: scale(1.05); }
-  .mini-player {
-    position: fixed;
-    bottom: 14px;
-    left: 14px;
-    z-index: 95;
-    background: #fff;
-    border: 2px solid var(--pink);
-    border-radius: 16px;
-    padding: 10px;
-    box-shadow: 0 10px 30px rgba(194, 24, 91, 0.35);
+/* ================================================================
+   np- : now-playing — collapsible "Now Playing" pill + bottom sheet
+   Replaces the fixed .mini-player. One permanent iframe; collapsing
+   hides the sheet with opacity/transform/pointer-events (never
+   display:none, never reparenting) so the music keeps playing.
+   Tokens: pink #ffb6cf · pink-deep #f06292 · pink-dark #c2185b ·
+   cream #fff8f5 · hairline #e8c9d4 · gold #caa04c
+   ================================================================ */
+
+/* ---------- root: fixed dock, bottom-center. Pill + sheet share one
+   grid cell (bottom-aligned) so the hidden layer takes no space ---------- */
+.np-root {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 95; /* same layer as the old .mini-player */
+  display: grid;
+  /* pin the single track to the available width — otherwise a long
+     marquee title makes the auto track size to max-content and
+     shoves the centered pill off-screen */
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: end;
+  padding: 0 24px;
+  pointer-events: none; /* children re-enable */
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+.np-pill,
+.np-sheet {
+  grid-area: 1 / 1;
+  pointer-events: auto;
+}
+
+/* ================= collapsed pill ================= */
+.np-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(320px, 100%);
+  height: 52px;
+  padding: 0 16px 0 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fff8f5 100%);
+  border: 1px solid #e8c9d4;
+  border-radius: 999px;
+  box-shadow:
+    0 2px 6px rgba(194, 24, 91, 0.10),
+    0 12px 30px rgba(194, 24, 91, 0.18);
+  cursor: pointer;
+  font: inherit;
+  color: #c2185b;
+  transition: transform 0.25s cubic-bezier(0.22, 0.85, 0.32, 1.04),
+              opacity 0.2s ease,
+              box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.np-pill:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 10px rgba(194, 24, 91, 0.14),
+    0 16px 36px rgba(194, 24, 91, 0.24);
+}
+/* pill hides while the sheet is up */
+.np-root.np-expanded .np-pill {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+/* ---------- spinning peony record ---------- */
+.np-disc {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(58, 26, 38, 0.35));
+}
+.np-disc-sm {
+  flex-basis: 26px;
+  width: 26px;
+  height: 26px;
+}
+.np-spin {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: np-spin 4s linear infinite;
+}
+@keyframes np-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- pill title (marquee only when .np-overflow) ---------- */
+.np-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 1.02rem;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #c2185b;
+}
+.np-title-inner { display: inline-block; }
+.np-title.np-overflow {
+  -webkit-mask-image: linear-gradient(90deg,
+    transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(90deg,
+    transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+}
+/* inner holds two identical segments; -50% = exactly one segment */
+.np-title.np-overflow .np-title-inner {
+  animation: np-marquee var(--np-mdur, 10s) linear infinite;
+}
+.np-title-seg {
+  display: inline-block;
+  padding-right: 36px;
+}
+@keyframes np-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ---------- chevron-up ---------- */
+.np-chevron {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: #f06292;
+}
+
+/* ================= expanded bottom sheet ================= */
+.np-sheet {
+  width: min(420px, 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fff8f5 100%);
+  border: 1px solid #e8c9d4;
+  border-radius: 20px;
+  padding: 6px 10px 10px;
+  box-shadow:
+    0 4px 12px rgba(194, 24, 91, 0.12),
+    0 24px 54px rgba(194, 24, 91, 0.26);
+  transition: transform 0.25s cubic-bezier(0.22, 0.85, 0.32, 1.04),
+              opacity 0.22s ease;
+}
+/* collapsed (default): invisible but STILL RENDERED — the iframe must
+   never hit display:none or leave the DOM, or it reloads */
+.np-root:not(.np-expanded) .np-sheet {
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  pointer-events: none;
+}
+.np-root.np-expanded .np-sheet {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ---------- sheet header ---------- */
+.np-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 6px 6px;
+}
+.np-sheet-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-size: 1.08rem;
+  font-style: italic;
+  font-weight: 600;
+  color: #c2185b;
+}
+.np-icon-btn {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #f06292;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.np-icon-btn:hover { background: #ffe4ef; color: #c2185b; }
+.np-icon-btn svg { width: 20px; height: 20px; display: block; }
+
+/* ---------- video ---------- */
+.np-video {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #38262e;
+  border: 1px solid #e8c9d4;
+}
+.np-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+/* ---------- reduced motion: no spin, no marquee, instant states ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .np-spin,
+  .np-title.np-overflow .np-title-inner {
+    animation: none !important;
   }
-  .mini-player iframe { display: block; border: none; border-radius: 10px; }
-  .mini-player .player-label {
-    font-size: 0.78rem;
-    font-style: italic;
-    color: var(--pink-deep);
-    text-align: center;
-    padding-top: 6px;
+  .np-pill,
+  .np-sheet {
+    transition: none !important;
   }
-  .mini-player .modal-close { top: -12px; right: -12px; background: #fff; border: 2px solid var(--pink); border-radius: 50%; font-size: 1rem; width: 30px; height: 30px; padding: 0; }
+}
 
   /* ---------- birthday cake ---------- */
   .cake-wrap { margin-top: 34px; display: flex; flex-direction: column; align-items: center; }
@@ -3081,22 +3285,286 @@ window.EggDiscovery = (function () {
     PetalWeather.burst({ count: 36, palette: 'candy', critters: 4 });
   }
 
+/* ================================================================
+   np- : now-playing — collapsible "Now Playing" pill + bottom sheet
+   window.NowPlaying = {
+     open({ videoId, title, onClose, embedUrl })  // idempotent
+     close()      // removes everything, music stops, fires onClose
+     expand()     // show sheet
+     collapse()   // show pill (iframe stays alive — never reloads)
+     isOpen()
+   }
+   embedUrl is an optional override (used by the demo, where the
+   sandbox has no network: about:blank). In production the URL is
+   built from videoId: https://www.youtube.com/embed/<id>?autoplay=1
+   On close, 'np:close' is also dispatched on window.
+   ================================================================ */
+(function () {
+  'use strict';
+
+  var root = null;
+  var pill = null;
+  var sheet = null;
+  var iframe = null;
+  var pillTitle = null;
+  var sheetTitle = null;
+  var state = { videoId: null, title: '', onClose: null, expanded: false };
+
+  function reducedMotion() {
+    return window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function embedUrlFor(videoId) {
+    return 'https://www.youtube.com/embed/' +
+      encodeURIComponent(videoId) + '?autoplay=1';
+  }
+
+  /* ---------- svg builders ---------- */
+  function discSVG(small) {
+    var groove = '';
+    var radii = [15.3, 13.6, 11.9, 10.2];
+    for (var i = 0; i < radii.length; i++) {
+      groove += '<circle cx="18" cy="18" r="' + radii[i] +
+        '" fill="none" stroke="rgba(255,214,228,0.12)" stroke-width="0.7"/>';
+    }
+    var petals = '';
+    for (var p = 0; p < 5; p++) {
+      petals += '<path d="M18 17.2 C 15.1 16.4 14.9 12.7 18 11.3 ' +
+        'C 21.1 12.7 20.9 16.4 18 17.2 Z" ' +
+        'transform="rotate(' + (p * 72 + 36) + ' 18 18)"/>';
+    }
+    return '<svg class="np-disc' + (small ? ' np-disc-sm' : '') +
+      '" viewBox="0 0 36 36" aria-hidden="true" focusable="false">' +
+      '<circle cx="18" cy="18" r="17.2" fill="#38262e"/>' +
+      '<circle cx="18" cy="18" r="16.7" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.8"/>' +
+      groove +
+      '<path d="M5.2 12.4 A 14.2 14.2 0 0 1 12.4 5.2" fill="none" ' +
+        'stroke="rgba(255,255,255,0.16)" stroke-width="2.6" stroke-linecap="round"/>' +
+      '<g class="np-spin">' +
+        '<circle cx="18" cy="18" r="8.2" fill="#ffe4ef" stroke="#f2a9c4" stroke-width="0.8"/>' +
+        '<g fill="#ffb6cf" stroke="#c2185b" stroke-width="0.9" stroke-linejoin="round">' +
+          petals +
+        '</g>' +
+        '<circle cx="18" cy="18" r="1.5" fill="#caa04c"/>' +
+      '</g>' +
+      '</svg>';
+  }
+
+  var CHEVRON_UP =
+    '<svg class="np-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M5 15 L12 8.5 L19 15" fill="none" stroke="currentColor" ' +
+    'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var CHEVRON_DOWN =
+    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M5 9 L12 15.5 L19 9" fill="none" stroke="currentColor" ' +
+    'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var CROSS =
+    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5" fill="none" ' +
+    'stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
+  /* ---------- sync visual state <-> state.expanded ---------- */
+  function sync() {
+    if (!root) return;
+    root.classList.toggle('np-expanded', state.expanded);
+    sheet.setAttribute('aria-hidden', state.expanded ? 'false' : 'true');
+    pill.setAttribute('aria-hidden', state.expanded ? 'true' : 'false');
+    pill.tabIndex = state.expanded ? -1 : 0;
+    var btns = sheet.querySelectorAll('.np-icon-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].tabIndex = state.expanded ? 0 : -1;
+    }
+  }
+
+  /* ---------- marquee: only if the pill title overflows ---------- */
+  function setupMarquee() {
+    if (!pillTitle) return;
+    pillTitle.classList.remove('np-overflow');
+    var inner = pillTitle.querySelector('.np-title-inner');
+    inner.innerHTML = '';
+    var seg = document.createElement('span');
+    seg.className = 'np-title-seg';
+    seg.textContent = state.title;
+    inner.appendChild(seg);
+    if (reducedMotion()) return;
+    // measure after layout
+    requestAnimationFrame(function () {
+      if (!pillTitle) return;
+      var need = seg.scrollWidth; // includes its 36px gap padding
+      var textW = need - 36;
+      if (textW > pillTitle.clientWidth + 1) {
+        var seg2 = seg.cloneNode(true);
+        seg2.setAttribute('aria-hidden', 'true');
+        inner.appendChild(seg2);
+        // ~30px/s, never faster than 8s per loop
+        var dur = Math.max(8, need / 30);
+        pillTitle.style.setProperty('--np-mdur', dur.toFixed(2) + 's');
+        pillTitle.classList.add('np-overflow');
+      }
+    });
+  }
+
+  function setTitle(title) {
+    state.title = title || '';
+    if (sheetTitle) sheetTitle.textContent = state.title;
+    if (pill) {
+      pill.setAttribute('aria-label',
+        'Now playing: ' + state.title + '. Expand player.');
+    }
+    setupMarquee();
+  }
+
+  function onKeydown(e) {
+    if (e.key === 'Escape' && root && state.expanded) collapse();
+  }
+
+  /* ---------- build (once per open lifecycle) ---------- */
+  function build(src) {
+    root = document.createElement('div');
+    root.className = 'np-root';
+
+    /* sheet — stays in the DOM permanently; collapsing only hides it
+       with opacity/transform/pointer-events so the iframe never
+       unloads and the music keeps playing */
+    sheet = document.createElement('div');
+    sheet.className = 'np-sheet';
+    sheet.setAttribute('role', 'region');
+    sheet.setAttribute('aria-label', 'Now playing');
+    sheet.innerHTML =
+      '<div class="np-sheet-head">' +
+        discSVG(true) +
+        '<span class="np-sheet-title"></span>' +
+        '<button type="button" class="np-icon-btn np-btn-collapse" ' +
+          'aria-label="Minimize player (music keeps playing)">' +
+          CHEVRON_DOWN + '</button>' +
+        '<button type="button" class="np-icon-btn np-btn-close" ' +
+          'aria-label="Close player and stop the music">' +
+          CROSS + '</button>' +
+      '</div>' +
+      '<div class="np-video"></div>';
+
+    iframe = document.createElement('iframe');
+    iframe.src = src;
+    iframe.title = state.title || 'Now playing';
+    iframe.setAttribute('allow', 'autoplay; encrypted-media');
+    iframe.setAttribute('allowfullscreen', '');
+    sheet.querySelector('.np-video').appendChild(iframe);
+
+    /* pill */
+    pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'np-pill';
+    pill.innerHTML =
+      discSVG(false) +
+      '<span class="np-title"><span class="np-title-inner"></span></span>' +
+      CHEVRON_UP;
+
+    root.appendChild(sheet);
+    root.appendChild(pill);
+    document.body.appendChild(root);
+
+    pillTitle = pill.querySelector('.np-title');
+    sheetTitle = sheet.querySelector('.np-sheet-title');
+
+    pill.addEventListener('click', expand);
+    sheet.querySelector('.np-btn-collapse').addEventListener('click', collapse);
+    sheet.querySelector('.np-btn-close').addEventListener('click', close);
+    document.addEventListener('keydown', onKeydown);
+  }
+
+  /* ---------- public api ---------- */
+  function open(opts) {
+    opts = opts || {};
+    var videoId = opts.videoId;
+    var src = opts.embedUrl || embedUrlFor(videoId);
+
+    if (root && state.videoId === videoId) {
+      // idempotent: same video -> just refresh title/callback + expand
+      if (opts.onClose) state.onClose = opts.onClose;
+      if (opts.title && opts.title !== state.title) setTitle(opts.title);
+      expand();
+      return;
+    }
+    if (root) {
+      // different video -> reuse the shell, swap the source
+      state.videoId = videoId;
+      if (opts.onClose) state.onClose = opts.onClose;
+      iframe.src = src;
+      iframe.title = opts.title || 'Now playing';
+      setTitle(opts.title || '');
+      expand();
+      return;
+    }
+    state.videoId = videoId;
+    state.title = opts.title || '';
+    state.onClose = opts.onClose || null;
+    state.expanded = false;
+    build(src);
+    setTitle(state.title);
+    sync(); // start collapsed…
+    if (reducedMotion()) {
+      state.expanded = true;
+      sync();
+    } else {
+      // …force a layout, then expand next frame so the sheet
+      // slides up with its 250ms transition
+      void root.getBoundingClientRect();
+      state.expanded = true;
+      requestAnimationFrame(function () {
+        if (root) sync(); // sync() reads state, so a synchronous
+      });                 // collapse() before this frame still wins
+    }
+  }
+
+  function expand() {
+    if (!root) return;
+    state.expanded = true;
+    sync();
+    var btn = sheet.querySelector('.np-btn-collapse');
+    if (btn && document.activeElement === pill) {
+      btn.focus({ preventScroll: true });
+    }
+  }
+
+  function collapse() {
+    if (!root) return;
+    var hadFocus = sheet.contains(document.activeElement);
+    state.expanded = false;
+    sync();
+    if (hadFocus) pill.focus({ preventScroll: true });
+  }
+
+  function close() {
+    if (!root) return;
+    var cb = state.onClose;
+    document.removeEventListener('keydown', onKeydown);
+    root.remove(); // iframe leaves the DOM -> playback stops (expected)
+    root = pill = sheet = iframe = pillTitle = sheetTitle = null;
+    state = { videoId: null, title: '', onClose: null, expanded: false };
+    window.dispatchEvent(new CustomEvent('np:close'));
+    if (typeof cb === 'function') cb();
+  }
+
+  function isOpen() { return !!root; }
+
+  window.NowPlaying = {
+    open: open,
+    close: close,
+    expand: expand,
+    collapse: collapse,
+    isOpen: isOpen
+  };
+})();
+
   // ---------- our song ----------
   const songBtn = document.getElementById('songBtn');
   songBtn.addEventListener('click', () => {
-    if (document.querySelector('.mini-player')) return;
-    const player = document.createElement('div');
-    player.className = 'mini-player';
-    player.innerHTML =
-      '<button class="modal-close" aria-label="close">✕</button>' +
-      '<iframe width="272" height="153" src="https://www.youtube.com/embed/O_BEFyNNIvM?autoplay=1" ' +
-      'title="I Got a Name - Jim Croce" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
-      '<div class="player-label">I Got a Name — Jim Croce 🎶</div>';
-    player.querySelector('.modal-close').addEventListener('click', () => {
-      player.remove();
-      songBtn.textContent = '🎵 press play, schwimp (our song)';
+    NowPlaying.open({
+      videoId: 'O_BEFyNNIvM',
+      title: 'I Got a Name — Jim Croce',
+      onClose: () => { songBtn.textContent = '🎵 press play, schwimp (our song)'; }
     });
-    document.body.appendChild(player);
     songBtn.textContent = '🎶 now playing: our song 💕';
   });
 
