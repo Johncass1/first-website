@@ -250,6 +250,67 @@
     box-shadow: 0 16px 44px rgba(194, 24, 91, 0.4);
     z-index: 15;
   }
+/* ================================================================
+   pdev- : polaroid-develop — "instant film" load-in for the gallery
+   Each .gallery img starts undeveloped (warm grey-green wash + blur,
+   like unexposed film) and develops to full colour over ~1.4s when
+   JS adds .pdev-developed. Broken photos become a warm-paper card
+   with a little shrimp photographer (built by PolaroidDev.init()).
+   Tokens: paper #f4ecdd · terracotta #c56f5e · ink #b3615a ·
+   taupe #a98b6f
+   ================================================================ */
+
+/* ---------- undeveloped film (class added by JS before src check) ----------
+   Both states spell out the same filter-function list in the same
+   order so the browser interpolates every term smoothly. */
+.gallery img.pdev-undeveloped {
+  filter: sepia(0.5) hue-rotate(58deg) saturate(0.38)
+          brightness(1.05) contrast(0.88) blur(3px);
+  transition: filter 1.4s ease-out;
+  will-change: filter;
+}
+
+/* ---------- developed ---------- */
+.gallery img.pdev-undeveloped.pdev-developed {
+  filter: sepia(0) hue-rotate(0deg) saturate(1)
+          brightness(1) contrast(1) blur(0px);
+}
+
+/* ---------- error fallback: warm paper card in the photo slot ---------- */
+.pdev-fallback {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 2px;
+  background:
+    radial-gradient(120% 85% at 30% 0%, rgba(255, 253, 246, 0.9) 0%, rgba(255, 253, 246, 0) 55%),
+    linear-gradient(160deg, #f7f0e2 0%, #f4ecdd 55%, #eee3cc 100%);
+  box-shadow: inset 0 0 0 1px rgba(197, 111, 94, 0.18);
+}
+.pdev-fallback svg {
+  width: 80px;
+  height: auto;
+  display: block;
+}
+.pdev-fallback-caption {
+  margin: 0;
+  font-style: italic;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: #a98b6f;
+}
+
+/* ---------- reduced motion: photos arrive fully developed ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .gallery img.pdev-undeveloped {
+    transition: none;
+    filter: none;
+  }
+}
 
   /* ---------- reasons flip cards ---------- */
   .reasons {
@@ -4034,6 +4095,108 @@ window.EggDiscovery = (function () {
 
   window.SealedLetter = { open: open, finish: finish };
 })();
+/* ================================================================
+   pdev- : polaroid-develop — behaviour
+   window.PolaroidDev.init() watches every .gallery img:
+   - adds .pdev-undeveloped (film wash) immediately
+   - on load  -> .pdev-developed after a forced reflow + double rAF,
+     so even cached/instant images visibly "develop" (the CSS
+     transition always runs from the washed state)
+   - on error -> replaces the img (figcaption untouched) with a
+     warm-paper card: shrimp photographer + tiny caption
+   Listeners are attached BEFORE the img.complete check, so
+   loading="lazy" images that finish at any moment are never missed.
+   Reduced motion is handled entirely in CSS (wash + transition are
+   disabled there), so this file stays the same either way.
+   ================================================================ */
+(function () {
+  'use strict';
+
+  /* little shrimp photographer, 2px round-cap terracotta line-art */
+  var PDEV_SHRIMP_SVG =
+  '<svg viewBox="0 0 112 84" aria-hidden="true">' +
+    '<g fill="none" stroke="#c56f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<g transform="translate(16,6)">' +
+        '<path d="M15.1 35.3 C 25.2 12.6 67.2 6.7 84 27.7 C 89 34.4 89.9 42 87.4 48.7"/>' +
+        '<path d="M15.1 35.3 C 16.5 40.5 20 44 25.5 45.5"/>' +
+        '<path d="M38.6 12.6 C 37 21 37.8 30.2 41.2 37"/>' +
+        '<path d="M56.3 10.1 C 54.6 19.3 56.3 28.6 59.6 35.3"/>' +
+        '<path d="M87.4 48.7 C 92 46.5 96.5 48 99 52"/>' +
+        '<path d="M87.4 48.7 C 91.5 49.5 94 53 94.5 57.5"/>' +
+        '<path d="M87.4 48.7 C 88.5 52.5 88 56.5 85.5 60"/>' +
+        '<path d="M18.5 25.2 C 15.1 22.7 11.8 21.8 8.4 21.8"/>' +
+        '<path d="M20.2 21.8 C 12.6 15.1 5.9 13.4 1.7 15.1"/>' +
+        '<path d="M44 41.5 C 43.2 45.4 41.6 48.4 38.8 50.4"/>' +
+        '<path d="M54 42 C 53.6 45.8 52.4 48.9 50 51.2"/>' +
+        '<path d="M25.5 45.5 C 20 48 15.5 52 12.5 57"/>' +
+        '<path d="M31.5 44.5 C 28.5 48.5 25 51.5 20.5 54"/>' +
+        '<circle cx="24.4" cy="24.2" r="2.7" fill="#c56f5e" stroke="none"/>' +
+        '<circle cx="25.4" cy="23.2" r="0.9" fill="#f4ecdd" stroke="none"/>' +
+        '<path d="M20.5 30.2 C 22.3 32 25.2 32.2 27.2 31.2"/>' +
+      '</g>' +
+      '<path d="M14 58 L 16 54 L 26 54 L 28 58"/>' +
+      '<rect x="8" y="58" width="30" height="20" rx="4.5" fill="#fdf8ec"/>' +
+      '<circle cx="22" cy="68" r="5.6"/>' +
+      '<circle cx="22" cy="68" r="1.9"/>' +
+      '<circle cx="33" cy="63" r="1.2" fill="#c56f5e" stroke="none"/>' +
+      '<path d="M6 52 L 2 47"/>' +
+      '<path d="M12 49 L 11 43"/>' +
+      '<path d="M4 59 L 0 58"/>' +
+    '</g>' +
+  '</svg>';
+
+  function pdevDevelop(img) {
+    /* commit the undeveloped state to layout, then flip on the next
+       frame(s) so the browser always paints the wash first and the
+       1.4s filter transition runs — even for cached images */
+    void img.offsetWidth;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        img.classList.add('pdev-developed');
+      });
+    });
+  }
+
+  function pdevFallback(img) {
+    if (!img.parentNode) return;
+    var card = document.createElement('div');
+    card.className = 'pdev-fallback';
+    card.setAttribute('role', 'img');
+    card.setAttribute('aria-label',
+      (img.getAttribute('alt') || 'a photo') + ' — photo unavailable');
+    card.innerHTML = PDEV_SHRIMP_SVG +
+      '<p class="pdev-fallback-caption">photo went for a swim 🌊</p>';
+    img.parentNode.replaceChild(card, img);
+  }
+
+  function pdevWatch(img) {
+    if (img.pdevWatched) return;
+    img.pdevWatched = true;
+
+    /* film wash on first, listeners attached before the complete
+       check — a lazy image can finish at any moment */
+    img.classList.add('pdev-undeveloped');
+    img.addEventListener('load', function () { pdevDevelop(img); }, { once: true });
+    img.addEventListener('error', function () { pdevFallback(img); }, { once: true });
+
+    if (img.complete) {
+      if (img.naturalWidth > 0) {
+        pdevDevelop(img);           /* cached: still develops visibly */
+      } else if (img.getAttribute('src')) {
+        pdevFallback(img);          /* already failed before init */
+      }
+      /* complete + no src: nothing to do yet; listeners are armed */
+    }
+  }
+
+  window.PolaroidDev = {
+    init: function () {
+      var imgs = document.querySelectorAll('.gallery img');
+      for (var i = 0; i < imgs.length; i++) pdevWatch(imgs[i]);
+    }
+  };
+})();
+  PolaroidDev.init();
 </script>
 </body>
 </html>
