@@ -648,8 +648,189 @@
 
   /* ---------- easter egg ---------- */
   #eggTrigger { cursor: pointer; display: inline-block; }
-  #eggTrigger.tapped { animation: eggTap 0.3s ease; }
-  @keyframes eggTap { 50% { transform: scale(1.35) rotate(-14deg); } }
+/* ================================================================
+   eggd- : egg-discovery — progressive cues for the hidden shrimp egg
+   (a) idle conspiratorial wiggle every ~18-22s
+   (b) per-tap escalation: 1 big wiggle · 2 blush halo · 3 🤫 bubble
+       · 4 gold sparkles + keyhole · 5 fires onFifthTap
+   (c) footer post-script revealed by EggDiscovery.showPS()
+   Everything absolutely positioned inside the trigger span —
+   zero layout shift inside the animated hero h1.
+   ================================================================ */
+
+/* ---------- trigger (class added by EggDiscovery.attach) ---------- */
+.eggd-trigger {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* kills double-tap zoom so 5 fast taps work on mobile */
+}
+
+/* ---------- (a) idle invitation: conspiratorial wiggle ---------- */
+.eggd-idle { animation: eggd-idle-wiggle 0.6s ease-in-out; }
+@keyframes eggd-idle-wiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  22%      { transform: rotate(-9deg) scale(1.06); }
+  48%      { transform: rotate(7deg)  scale(1.1); }
+  74%      { transform: rotate(-4deg) scale(1.04); }
+}
+
+/* ---------- (b) tap pops ---------- */
+/* base pop, taps 2-5 (a touch smaller than the site's old .tapped) */
+.eggd-pop { animation: eggd-pop 0.3s ease; }
+@keyframes eggd-pop { 50% { transform: scale(1.22) rotate(-10deg); } }
+/* tap 1: bigger, chattier wiggle */
+.eggd-pop-big { animation: eggd-pop-big 0.55s ease; }
+@keyframes eggd-pop-big {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  20%      { transform: scale(1.32) rotate(-15deg); }
+  50%      { transform: scale(1.16) rotate(11deg); }
+  76%      { transform: scale(1.24) rotate(-6deg); }
+}
+
+/* ---------- tap 2: blush halo (behind the shrimp, no layout) ---------- */
+.eggd-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 190%;
+  height: 190%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 234, 242, 0.9) 0%,
+    rgba(255, 170, 200, 0.68) 36%,
+    rgba(240, 98, 146, 0.34) 58%,
+    rgba(240, 98, 146, 0) 76%);
+  z-index: -1;
+  pointer-events: none;
+  animation: eggd-halo-in 0.45s ease both,
+             eggd-halo-pulse 2s ease-in-out 0.45s infinite;
+}
+@keyframes eggd-halo-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.45); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes eggd-halo-pulse {
+  0%, 100% { opacity: 1;    transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.72; transform: translate(-50%, -50%) scale(1.14); }
+}
+
+/* ---------- tap 3: tiny 🤫 bubble (site's .bubble language, but
+   absolute to the trigger instead of fixed, auto-removed by JS) ---------- */
+.eggd-bubble {
+  position: absolute;
+  left: 62%;
+  bottom: calc(100% - 14px);
+  transform-origin: 10% 100%;
+  background: #fff;
+  color: var(--pink-dark, #c2185b);
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 6px 9px;
+  border-radius: 14px;
+  border: 2px solid var(--pink, #ffb6cf);
+  box-shadow: 0 4px 12px rgba(240, 98, 146, 0.3);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 3;
+  animation: eggd-bubble-pop 1.2s ease both;
+}
+@keyframes eggd-bubble-pop {
+  0%   { transform: scale(0)    translateY(0);     opacity: 0; }
+  18%  { transform: scale(1.12) translateY(-3px);  opacity: 1; }
+  30%  { transform: scale(1)    translateY(-5px); }
+  74%  { transform: scale(1)    translateY(-11px); opacity: 1; }
+  100% { transform: scale(0.92) translateY(-18px); opacity: 0; }
+}
+
+/* ---------- tap 4: gold sparkles + keyhole (one wrapper, .eggd-fx) ---------- */
+.eggd-fx {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
+.eggd-sparkle {
+  position: absolute;
+  display: block;
+  overflow: visible;
+  opacity: 0;
+  filter: drop-shadow(0 0 3px rgba(202, 160, 76, 0.6));
+  animation: eggd-sparkle var(--eggd-sd, 1.6s) ease-in-out var(--eggd-sy, 0s) infinite;
+}
+@keyframes eggd-sparkle {
+  0%   { opacity: 0;   transform: scale(0.2)  rotate(0deg); }
+  15%  { opacity: 1;   transform: scale(1)    rotate(10deg); }
+  50%  { opacity: 0.6; transform: scale(0.7)  rotate(24deg); }
+  72%  { opacity: 1;   transform: scale(0.95) rotate(34deg); }
+  100% { opacity: 0;   transform: scale(0.25) rotate(46deg); }
+}
+.eggd-keyhole {
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 14%;
+  width: 15px;
+  height: 19px;
+  overflow: visible;
+  opacity: 0;
+  animation: eggd-key-in 0.6s ease 0.35s both,
+             eggd-key-float 3s ease-in-out 0.95s infinite;
+}
+@keyframes eggd-key-in {
+  from { opacity: 0; transform: translateY(5px) scale(0.7); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@keyframes eggd-key-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* ---------- reset fade (JS adds .eggd-out, removes node after ~400ms) ---------- */
+.eggd-out { animation: eggd-fadeout 0.35s ease both !important; }
+@keyframes eggd-fadeout { to { opacity: 0; } }
+
+/* ---------- (c) footer post-script ---------- */
+.eggd-ps {
+  display: none;
+  margin: 12px auto 0;
+  max-width: 460px;
+  font-style: italic;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--pink-deep, #f06292);
+  opacity: 0.9;
+}
+.eggd-ps.eggd-ps-show {
+  display: block;
+  animation: eggd-ps-fade 1s ease both;
+}
+@keyframes eggd-ps-fade {
+  from { opacity: 0; }
+  to   { opacity: 0.9; }
+}
+
+/* ---------- prefers-reduced-motion: states appear instantly ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .eggd-idle,
+  .eggd-pop,
+  .eggd-pop-big,
+  .eggd-halo,
+  .eggd-bubble,
+  .eggd-sparkle,
+  .eggd-keyhole,
+  .eggd-out,
+  .eggd-ps.eggd-ps-show { animation: none !important; }
+  .eggd-halo, .eggd-bubble, .eggd-keyhole { opacity: 1; }
+  .eggd-sparkle { opacity: 0.9; }
+  .eggd-bubble { transform: translateY(-6px); }
+  .eggd-out { opacity: 0 !important; }
+}
 
   .modal {
     position: fixed;
@@ -2272,7 +2453,13 @@ button.wsl-close:hover { transform: scale(1.08); }
     </div>
   </div>
 
-  <footer>made with 💕 (and a small army of shrimps) for Sam, the best schwimp in the world</footer>
+  <footer>made with 💕 (and a small army of shrimps) for Sam, the best schwimp in the world
+    <!-- ==================== eggd- footer post-script ====================
+     Goes INSIDE the existing <footer>, right after its text.
+     Hidden until EggDiscovery.showPS() is called. -->
+<p class="eggd-ps" id="eggdPS">p.s. — the shrimp upstairs is keeping a secret. give him five little taps 🦐</p>
+<!-- ==================== /eggd- footer post-script ==================== -->
+  </footer>
 
 <script>
 /* ========== petal-weather (pw-) ==========
@@ -2658,9 +2845,204 @@ button.wsl-close:hover { transform: scale(1.08); }
   function sayYes() {
     document.getElementById('yesOverlay').classList.add('show');
     TicketKeepsake.play();
+    EggDiscovery.showPS();
     PetalWeather.burst({ count: 44, palette: 'candy', critters: 10 });
   }
   yesBtn.addEventListener('click', sayYes);
+
+/* ==================== eggd- egg-discovery API ====================
+   window.EggDiscovery = {
+     attach(triggerEl, { onFifthTap }),
+     showPS()
+   }
+   attach() takes over ALL tap handling on the trigger:
+   - counts taps; state resets if >4s passes between taps
+   - tap 1: bigger wiggle · 2: blush halo · 3: 🤫 bubble (~1.2s)
+   - tap 4: gold sparkles + keyhole · 5: onFifthTap() fires, state resets
+   - idle: conspiratorial wiggle every ~18-22s, paused mid-escalation
+   showPS() reveals the footer post-script (#eggdPS) with a 1s fade.
+   prefers-reduced-motion: no idle wiggle, states appear instantly,
+   counting still works.
+   ================================================================== */
+window.EggDiscovery = (function () {
+  'use strict';
+
+  var TAP_WINDOW = 4000;      // ms allowed between taps (matches old site timer)
+  var IDLE_MIN = 18000;       // idle wiggle every 18-22s
+  var IDLE_SPAN = 4000;
+  var BUBBLE_LIFE = 1200;     // 🤫 auto-remove
+  var FADE_OUT = 400;         // reset fade before node removal
+
+  var trigger = null;
+  var onFifthTap = null;
+  var taps = 0;
+  var tapTimer = null;
+  var idleTimer = null;
+  var halo = null;
+  var fx = null;
+  var bubble = null;
+
+  function reducedMotion() {
+    return !!(window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function make(html) {
+    var tpl = document.createElement('div');
+    tpl.innerHTML = html.trim();
+    return tpl.firstChild;
+  }
+
+  /* ---------- decorations ---------- */
+
+  var SPARKLE_PATH =
+    'M0 -7 C 0.8 -2.3 2.3 -0.8 7 0 C 2.3 0.8 0.8 2.3 0 7 ' +
+    'C -0.8 2.3 -2.3 -0.8 -7 0 C -2.3 -0.8 -0.8 -2.3 0 -7 Z';
+
+  /* x/y in % of the trigger box; s = px size; rot = base tilt;
+     dy = animation-delay; dur = twinkle period */
+  var SPARKLES = [
+    { x: '-30%', y: '-12%', s: 16, rot: 8,   dy: 0,    dur: 1.5 },
+    { x: '66%',  y: '-36%', s: 12, rot: -18, dy: 0.22, dur: 1.7 },
+    { x: '-20%', y: '66%',  s: 11, rot: 24,  dy: 0.38, dur: 1.6 },
+    { x: '94%',  y: '70%',  s: 13, rot: -8,  dy: 0.12, dur: 1.8 },
+    { x: '24%',  y: '-42%', s: 9,  rot: 32,  dy: 0.5,  dur: 1.45 }
+  ];
+
+  function sparkleSvg(c) {
+    return '<svg class="eggd-sparkle" viewBox="-8 -8 16 16" aria-hidden="true" ' +
+      'style="left:' + c.x + ';top:' + c.y + ';width:' + c.s + 'px;height:' + c.s + 'px;' +
+      '--eggd-sy:' + c.dy + 's;--eggd-sd:' + c.dur + 's">' +
+      '<g transform="rotate(' + c.rot + ')">' +
+      '<path d="' + SPARKLE_PATH + '" fill="#caa04c"/>' +
+      '<path d="' + SPARKLE_PATH + '" transform="scale(0.45)" fill="#f4e3ac"/>' +
+      '</g></svg>';
+  }
+
+  function keyholeSvg() {
+    return '<svg class="eggd-keyhole" viewBox="0 0 22 30" aria-hidden="true">' +
+      '<circle cx="11" cy="10" r="6" fill="none" stroke="#b3615a" stroke-width="3"/>' +
+      '<path d="M9 15.3 L6.7 24.4 Q6.4 25.6 7.6 25.6 L14.4 25.6 Q15.6 25.6 15.3 24.4 L13 15.3" ' +
+      'fill="none" stroke="#b3615a" stroke-width="3" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  /* ---------- tap pop ---------- */
+
+  function pop(cls) {
+    trigger.classList.remove('eggd-pop', 'eggd-pop-big');
+    void trigger.offsetWidth; /* restart animation */
+    trigger.classList.add(cls);
+  }
+
+  /* ---------- escalation stages ---------- */
+
+  function showHalo() {
+    if (halo) return;
+    halo = make('<span class="eggd-halo" aria-hidden="true"></span>');
+    trigger.appendChild(halo);
+  }
+
+  function showBubble() {
+    if (bubble) bubble.remove();
+    bubble = make('<span class="eggd-bubble" aria-hidden="true">🤫</span>');
+    trigger.appendChild(bubble);
+    var b = bubble;
+    setTimeout(function () {
+      b.remove();
+      if (bubble === b) bubble = null;
+    }, BUBBLE_LIFE);
+  }
+
+  function showFx() {
+    if (fx) return;
+    var html = '<span class="eggd-fx" aria-hidden="true">';
+    for (var i = 0; i < SPARKLES.length; i++) html += sparkleSvg(SPARKLES[i]);
+    html += keyholeSvg() + '</span>';
+    fx = make(html);
+    trigger.appendChild(fx);
+  }
+
+  function clearDecorations(instant) {
+    [halo, fx].forEach(function (el) {
+      if (!el) return;
+      if (instant || reducedMotion()) {
+        el.remove();
+      } else {
+        el.classList.add('eggd-out');
+        setTimeout(function () { el.remove(); }, FADE_OUT);
+      }
+    });
+    halo = fx = null;
+    if (bubble) { bubble.remove(); bubble = null; }
+  }
+
+  /* ---------- state ---------- */
+
+  function resetTaps() {
+    taps = 0;
+    clearTimeout(tapTimer);
+    tapTimer = null;
+    clearDecorations(false);
+    scheduleIdle();
+  }
+
+  function scheduleIdle() {
+    clearTimeout(idleTimer);
+    if (reducedMotion()) return;
+    idleTimer = setTimeout(function () {
+      if (trigger && taps === 0) {
+        trigger.classList.remove('eggd-idle');
+        void trigger.offsetWidth;
+        trigger.classList.add('eggd-idle');
+        setTimeout(function () { trigger.classList.remove('eggd-idle'); }, 700);
+      }
+      scheduleIdle();
+    }, IDLE_MIN + Math.random() * IDLE_SPAN);
+  }
+
+  function handleTap() {
+    /* idle invitation pauses while escalation is in progress */
+    clearTimeout(idleTimer);
+    trigger.classList.remove('eggd-idle');
+
+    taps++;
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(resetTaps, TAP_WINDOW);
+
+    if (!reducedMotion()) pop(taps === 1 ? 'eggd-pop-big' : 'eggd-pop');
+
+    if (taps === 2) showHalo();
+    else if (taps === 3) showBubble();
+    else if (taps === 4) showFx();
+    else if (taps >= 5) {
+      taps = 0;
+      clearTimeout(tapTimer);
+      tapTimer = null;
+      clearDecorations(true); /* gate opens on top; clean up instantly */
+      scheduleIdle();
+      if (typeof onFifthTap === 'function') onFifthTap();
+    }
+  }
+
+  /* ---------- public API ---------- */
+
+  function attach(triggerEl, opts) {
+    if (trigger) trigger.removeEventListener('click', handleTap);
+    trigger = triggerEl;
+    onFifthTap = (opts && opts.onFifthTap) || null;
+    trigger.classList.add('eggd-trigger');
+    trigger.addEventListener('click', handleTap);
+    scheduleIdle();
+  }
+
+  function showPS() {
+    var ps = document.getElementById('eggdPS');
+    if (ps) ps.classList.add('eggd-ps-show');
+  }
+
+  return { attach: attach, showPS: showPS };
+})();
 
   // ---------- easter egg: 5 taps on the hero shrimp ----------
   const eggTrigger = document.getElementById('eggTrigger');
@@ -2668,17 +3050,8 @@ button.wsl-close:hover { transform: scale(1.08); }
   const eggOverlay = document.getElementById('eggOverlay');
   const eggInput = document.getElementById('eggInput');
   const eggHint = document.getElementById('eggHint');
-  let eggTaps = 0, eggTimer;
-
-  eggTrigger.addEventListener('click', () => {
-    eggTaps++;
-    clearTimeout(eggTimer);
-    eggTimer = setTimeout(() => { eggTaps = 0; }, 4000);
-    eggTrigger.classList.remove('tapped');
-    void eggTrigger.offsetWidth;
-    eggTrigger.classList.add('tapped');
-    if (eggTaps >= 5) {
-      eggTaps = 0;
+  EggDiscovery.attach(eggTrigger, {
+    onFifthTap: () => {
       eggGate.classList.add('show');
       eggInput.value = '';
       eggHint.textContent = '';
