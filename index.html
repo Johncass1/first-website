@@ -566,6 +566,28 @@
     color: var(--pink-deep);
     border: 2px solid var(--pink);
     position: relative;
+    transition: left 0.45s cubic-bezier(0.25, 0.8, 0.3, 1), top 0.45s cubic-bezier(0.25, 0.8, 0.3, 1), transform 0.2s ease;
+  }
+  #noBtn.scurrying { animation: no-wobble 0.45s ease; }
+  @keyframes no-wobble {
+    20% { rotate: -7deg; }
+    45% { rotate: 6deg; }
+    70% { rotate: -4deg; }
+    100% { rotate: 0deg; }
+  }
+  .no-dust {
+    position: fixed;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #dfbccb;
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 49;
+    animation: no-dustfade 0.6s ease-out forwards;
+  }
+  @keyframes no-dustfade {
+    to { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
   }
   .no-note {
     margin-top: 14px;
@@ -3522,6 +3544,17 @@ button.wsl-close:hover { transform: scale(1.08); }
     setTimeout(() => bubble.remove(), 1500);
   });
 
+  // ---------- committee card: drawn critters instead of emoji ----------
+  const squad = document.querySelector('.squad');
+  if (squad && window.Critters && Critters.make) {
+    squad.innerHTML = '';
+    ['shrimp', 'bee', 'rat', 'shrimp'].forEach((species) => {
+      const seat = document.createElement('span');
+      seat.appendChild(Critters.make(species));
+      squad.appendChild(seat);
+    });
+  }
+
   // ---------- reasons flip cards ----------
   document.querySelectorAll('.flip-card').forEach((card) => {
     card.addEventListener('click', () => card.classList.toggle('flipped'));
@@ -3543,15 +3576,41 @@ button.wsl-close:hover { transform: scale(1.08); }
   ];
   let dodges = 0;
 
+  let lastDodge = 0;
   function dodge() {
+    // throttle: while sliding, passing under the cursor would re-trigger mouseover
+    const now = Date.now();
+    if (now - lastDodge < 420) return;
+    lastDodge = now;
     dodges++;
-    // run away to a random spot on screen
-    noBtn.style.position = 'fixed';
-    noBtn.style.zIndex = 50;
+    const rect = noBtn.getBoundingClientRect();
+    if (noBtn.style.position !== 'fixed') {
+      // pin at the current spot first so the first hop animates too
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = rect.left + 'px';
+      noBtn.style.top = rect.top + 'px';
+      noBtn.style.zIndex = 50;
+      void noBtn.offsetWidth;
+    }
+    // little dust puffs at the departure spot
+    for (let i = 0; i < 3; i++) {
+      const d = document.createElement('span');
+      d.className = 'no-dust';
+      d.style.left = (rect.left + rect.width / 2 + (Math.random() * 24 - 12)) + 'px';
+      d.style.top = (rect.top + rect.height - 8 + (Math.random() * 8 - 4)) + 'px';
+      d.style.setProperty('--dx', (Math.random() * 44 - 22) + 'px');
+      d.style.setProperty('--dy', (-8 - Math.random() * 20) + 'px');
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 700);
+    }
+    // scurry away to a random spot on screen
     const maxX = window.innerWidth - noBtn.offsetWidth - 20;
     const maxY = window.innerHeight - noBtn.offsetHeight - 20;
     noBtn.style.left = (10 + Math.random() * maxX) + 'px';
     noBtn.style.top = (10 + Math.random() * maxY) + 'px';
+    noBtn.classList.remove('scurrying');
+    void noBtn.offsetWidth;
+    noBtn.classList.add('scurrying');
     // shrink the no, grow the yes
     noBtn.style.transform = 'scale(' + Math.max(0.4, 1 - dodges * 0.08) + ')';
     yesBtn.style.transform = 'scale(' + Math.min(1.8, 1 + dodges * 0.07) + ')';
