@@ -1580,9 +1580,86 @@
     overflow: hidden;
     background: #f4ecdd;
     font-family: 'Cormorant Garamond', Georgia, serif;
-    transition: opacity 1s ease, visibility 1s ease;
   }
-  #enterScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+/* ================================================================
+   th- : threshold — choreographed "unwrapping" Enter transition
+   Two paper halves (matching the intro's #f4ecdd + grain) part along
+   a torn-tissue seam while 14 stroked petals shed and tint from
+   terracotta to candy pink as they fall past the vertical midpoint.
+   All nodes are built by JS (Threshold.run) and appended to <body>;
+   nothing here renders until run() is called.
+   z-map: enterScreen 200 < bottom half 201 < top half 202 < petals 211
+   ================================================================ */
+
+/* ---------- paper halves (fixed, full viewport, clipped by JS-set
+   wavy polygons; drop-shadow is applied to the CONTAINER so the soft
+   shadow follows the torn silhouette, not a rectangle) ---------- */
+.th-half {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform;
+  transform: translateY(0);
+  /* step 3: 250ms -> 1400ms. JS adds .th-open after a reflow. */
+  transition: transform 1.15s cubic-bezier(0.62, 0.02, 0.34, 1);
+}
+.th-half-bottom {
+  z-index: 201;
+  filter: drop-shadow(0 -5px 12px rgba(120, 88, 66, 0.2));
+}
+.th-half-top {
+  z-index: 202; /* overlaps bottom at rest, like layered tissue */
+  filter: drop-shadow(0 7px 16px rgba(120, 88, 66, 0.3));
+}
+.th-half-top.th-open    { transform: translateY(-114%); }
+.th-half-bottom.th-open { transform: translateY(114%); }
+
+/* ---------- plies: each half = a lighter "fibre" fringe ply below a
+   main paper ply, each with its own (JS-generated) clip-path wave.
+   The fringe pokes 1-2.5% past the main seam with a jaggier edge, so
+   the tear reads as two-ply fibrous tissue, never a hard line. ---------- */
+.th-ply {
+  position: absolute;
+  inset: 0;
+}
+.th-ply-fringe {
+  background: rgba(250, 243, 228, 0.96);
+}
+.th-ply-main {
+  background:
+    radial-gradient(125% 120% at 50% 44%,
+      rgba(255, 250, 242, 0.4) 0%, rgba(255, 250, 242, 0) 58%),
+    #f4ecdd;
+}
+
+/* same grain recipe as the intro's .peony-noise */
+.th-grain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* ---------- petal layer (14 tinting petals, above the halves) ---------- */
+.th-petals {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 211;
+  pointer-events: none;
+  overflow: visible;
+  display: block;
+}
+
+/* ---------- reduced motion: JS never builds these under reduce, but
+   belt-and-braces in case markup ever lingers ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .th-half, .th-petals { display: none !important; }
+}
   .peony-noise {
     position: absolute;
     inset: 0;
@@ -4346,13 +4423,352 @@ window.EggDiscovery = (function () {
     window.__stopPeonies = () => cancelAnimationFrame(raf);
   })();
 
+/* ================================================================
+   th- : threshold — choreographed "unwrapping" Enter transition.
+   API:  window.Threshold = { run(enterScreenEl, onDone) }
+
+   Choreography (~1.6s):
+     0-250ms    intro's foreground (all direct children of the enter
+                screen) fades out over the paper background
+     100ms-     14 stroked bezier petals shed from the upper half and
+                fall; each tints terracotta -> candy pink as it passes
+                the vertical midpoint (per-frame JS color lerp)
+     240ms      two paper halves (paper + grain, torn-tissue seam)
+                snap in above everything (pixel-identical to the now
+                blank paper, so the swap is invisible); enter screen
+                is hidden underneath
+     250-1400ms halves ease apart (top up, bottom down) revealing the
+                pink site;  ~500ms: PetalWeather.burst fires if the
+                engine exists (extra shower in the revealed band)
+     1600ms     halves removed, enter screen display:none, onDone()
+
+   Guarantees:
+     - onDone fires EXACTLY once (2.2s safety timeout even if
+       transitions/rAF die; re-entry guarded)
+     - double-tap on Enter cannot double-run
+     - prefers-reduced-motion: no animation at all — instant hide,
+       onDone still fires exactly once
+   ================================================================ */
+window.Threshold = (function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var TAU = 6.28318;
+  var uid = 0;
+
+  /* terracotta (start) -> candy (end) tint pairs; strokes stay in the
+     #c56f5e family up top, land in the #ffb6cf -> #f06292 family */
+  var TINTS = [
+    ['#c56f5e', '#f06292'],
+    ['#dd8f77', '#ffb6cf'],
+    ['#b3615a', '#f06292'],
+    ['#cb7364', '#ff9ec0'],
+    ['#c56f5e', '#f8a5c0'],
+    ['#d68472', '#ffb6cf']
+  ];
+
+  function reduced() {
+    return window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  function rr(a, b) { return a + Math.random() * (b - a); }
+
+  /* ---------- color lerp (hex -> hex) ---------- */
+  function hexRgb(h) {
+    return [parseInt(h.slice(1, 3), 16),
+            parseInt(h.slice(3, 5), 16),
+            parseInt(h.slice(5, 7), 16)];
+  }
+  function lerpHex(a, b, t) {
+    var A = hexRgb(a), B = hexRgb(b), out = '#', i, v;
+    for (i = 0; i < 3; i++) {
+      v = Math.round(A[i] + (B[i] - A[i]) * t);
+      out += (v < 16 ? '0' : '') + v.toString(16);
+    }
+    return out;
+  }
+
+  /* ---------- petal geometry (exact intro-peony petal path) ---------- */
+  function petalPath(l, w) {
+    return 'M0 0 C ' + w.toFixed(1) + ' ' + (-l * 0.25).toFixed(1) + ' ' +
+           (w * 0.55).toFixed(1) + ' ' + (-l).toFixed(1) + ' 0 ' + (-l).toFixed(1) +
+           ' C ' + (-w * 0.55).toFixed(1) + ' ' + (-l).toFixed(1) + ' ' +
+           (-w).toFixed(1) + ' ' + (-l * 0.25).toFixed(1) + ' 0 0 Z';
+  }
+
+  /* ---------- torn seam ----------
+     One shared low-frequency wave (so the two halves mate), sampled as
+     clip-path percentage polygons. Each half gets a "main" ply clipped
+     at the wave and a lighter "fringe" ply poking 0.7-2.4% further with
+     high-frequency jitter — the fibrous torn-tissue edge. */
+  function makeWave() {
+    var base = 50 + rr(-2.5, 2.5);
+    var a1 = rr(2.0, 3.2), f1 = rr(1.0, 1.5), p1 = rr(0, TAU);
+    var a2 = rr(0.8, 1.4), f2 = rr(2.6, 3.6), p2 = rr(0, TAU);
+    return function (x) { /* x in 0..100 -> y in % */
+      var u = x / 100;
+      return base + a1 * Math.sin(u * TAU * f1 + p1) +
+                    a2 * Math.sin(u * TAU * f2 + p2);
+    };
+  }
+  function seamPolys(wave) {
+    var N = 40, i, x, y, fr;
+    var topMain = ['0% 0%', '100% 0%'];
+    var topFr   = ['0% 0%', '100% 0%'];
+    var botMain = [], botFr = [];
+    for (i = N; i >= 0; i--) {              /* right -> left for top */
+      x = (i / N) * 100;
+      y = wave(x);
+      fr = 0.7 + Math.abs(Math.sin(x * 0.9 + 2)) * 1.1 + rr(0, 0.6);
+      topMain.push(x.toFixed(2) + '% ' + y.toFixed(2) + '%');
+      topFr.push(x.toFixed(2) + '% ' + (y + fr).toFixed(2) + '%');
+    }
+    for (i = 0; i <= N; i++) {              /* left -> right for bottom */
+      x = (i / N) * 100;
+      y = wave(x) - 0.45;                   /* tuck under the top half */
+      fr = 0.7 + Math.abs(Math.sin(x * 1.1)) * 1.1 + rr(0, 0.6);
+      botMain.push(x.toFixed(2) + '% ' + y.toFixed(2) + '%');
+      botFr.push(x.toFixed(2) + '% ' + (y - fr).toFixed(2) + '%');
+    }
+    botMain.push('100% 100%', '0% 100%');
+    botFr.push('100% 100%', '0% 100%');
+    return {
+      topMain: 'polygon(' + topMain.join(', ') + ')',
+      topFringe: 'polygon(' + topFr.join(', ') + ')',
+      botMain: 'polygon(' + botMain.join(', ') + ')',
+      botFringe: 'polygon(' + botFr.join(', ') + ')'
+    };
+  }
+
+  /* ---------- DOM builders ---------- */
+  function grainSvg(id) {
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'th-grain');
+    svg.setAttribute('aria-hidden', 'true');
+    var filt = document.createElementNS(NS, 'filter');
+    filt.setAttribute('id', id);
+    var turb = document.createElementNS(NS, 'feTurbulence');
+    turb.setAttribute('type', 'fractalNoise');
+    turb.setAttribute('baseFrequency', '0.9');
+    turb.setAttribute('numOctaves', '2');
+    turb.setAttribute('stitchTiles', 'stitch');
+    var cm = document.createElementNS(NS, 'feColorMatrix');
+    cm.setAttribute('type', 'saturate');
+    cm.setAttribute('values', '0');
+    filt.appendChild(turb);
+    filt.appendChild(cm);
+    var rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('width', '100%');
+    rect.setAttribute('height', '100%');
+    rect.setAttribute('filter', 'url(#' + id + ')');
+    svg.appendChild(filt);
+    svg.appendChild(rect);
+    return svg;
+  }
+  function makeHalf(which, mainClip, fringeClip) {
+    var half = document.createElement('div');
+    half.className = 'th-half th-half-' + which;
+    half.setAttribute('aria-hidden', 'true');
+    half.style.visibility = 'hidden';        /* revealed at ~240ms */
+    var fringe = document.createElement('div');
+    fringe.className = 'th-ply th-ply-fringe';
+    fringe.style.clipPath = fringeClip;
+    fringe.style.webkitClipPath = fringeClip;
+    var main = document.createElement('div');
+    main.className = 'th-ply th-ply-main';
+    main.style.clipPath = mainClip;
+    main.style.webkitClipPath = mainClip;
+    main.appendChild(grainSvg('th-grain-' + which + '-' + (++uid)));
+    half.appendChild(fringe);
+    half.appendChild(main);
+    return half;
+  }
+
+  /* ---------- the 14 signature tinting petals ---------- */
+  function makePetals() {
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'th-petals');
+    svg.setAttribute('aria-hidden', 'true');
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var petals = [], i;
+    for (i = 0; i < 14; i++) {
+      var l = rr(26, 44);
+      var pair = TINTS[i % TINTS.length];
+      var el = document.createElementNS(NS, 'path');
+      el.setAttribute('d', petalPath(l, l * rr(0.42, 0.55)));
+      el.setAttribute('fill', pair[0]);
+      el.setAttribute('fill-opacity', '0.3');
+      el.setAttribute('stroke', pair[0]);
+      el.setAttribute('stroke-width', '2.5');
+      el.setAttribute('stroke-linejoin', 'round');
+      el.setAttribute('stroke-linecap', 'round');
+      el.setAttribute('opacity', '0');
+      svg.appendChild(el);
+      var y0 = rr(-0.12, 0.38) * vh;         /* shed from the upper half */
+      petals.push({
+        el: el, from: pair[0], to: pair[1], tint: -1,
+        x: rr(0.04, 0.96) * vw, y: y0,
+        vy: (vh * 1.14 - y0) / rr(1.5, 2.05), /* px/s: exits by ~1.7-2.3s */
+        drift: rr(-22, 22),
+        swayA: rr(18, 42), swayF: rr(0.2, 0.45) * TAU, phase: rr(0, TAU),
+        rot0: rr(0, 360), spin: rr(30, 90) * (Math.random() < 0.5 ? -1 : 1),
+        delay: rr(0, 0.28), age: 0
+      });
+    }
+    return { svg: svg, petals: petals };
+  }
+
+  function petalTick(state, dt) {
+    var vh = window.innerHeight;
+    var lo = vh * 0.36, span = vh * 0.28;    /* tint band around midpoint */
+    var alive = 0, i, p, m, c, x, rot;
+    for (i = 0; i < state.petals.length; i++) {
+      p = state.petals[i];
+      if (p.dead) continue;
+      if (p.delay > 0) { p.delay -= dt; alive++; continue; }
+      p.age += dt;
+      p.y += p.vy * dt;
+      p.x += p.drift * dt;
+      if (p.y > vh + 80) { p.dead = true; p.el.setAttribute('opacity', '0'); continue; }
+      alive++;
+      /* terracotta -> candy across the midline (smoothstep) */
+      m = (p.y - lo) / span;
+      m = m < 0 ? 0 : m > 1 ? 1 : m;
+      m = m * m * (3 - 2 * m);
+      if (Math.abs(m - p.tint) > 0.02 || p.tint < 0) {
+        p.tint = m;
+        c = lerpHex(p.from, p.to, m);
+        p.el.setAttribute('stroke', c);
+        p.el.setAttribute('fill', c);
+      }
+      x = p.x + Math.sin(p.age * p.swayF + p.phase) * p.swayA;
+      rot = p.rot0 + p.spin * p.age;
+      p.el.setAttribute('opacity', Math.min(1, p.age / 0.18) * 0.95);
+      p.el.setAttribute('transform',
+        'translate(' + x.toFixed(1) + ' ' + p.y.toFixed(1) + ') rotate(' + rot.toFixed(1) + ')');
+    }
+    return alive;
+  }
+
+  /* ---------- run ---------- */
+  var running = false;
+
+  function run(enterScreenEl, onDone) {
+    /* exactly-once onDone, even with no element */
+    var fired = false;
+    function done() {
+      if (fired) return;
+      fired = true;
+      if (typeof onDone === 'function') {
+        try { onDone(); } catch (e) { /* never rethrow into cleanup */ }
+      }
+    }
+
+    if (running || (enterScreenEl && enterScreenEl.__thDone)) return; /* double-tap guard */
+    running = true;
+    if (enterScreenEl) enterScreenEl.__thDone = true;
+
+    if (!enterScreenEl || reduced()) {
+      /* reduced motion (or nothing to animate): instant, still 1x onDone */
+      if (enterScreenEl) enterScreenEl.style.display = 'none';
+      running = false;
+      done();
+      return;
+    }
+
+    var timers = [];
+    function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+
+    /* build everything up-front (halves start invisible) */
+    var polys = seamPolys(makeWave());
+    var topHalf = makeHalf('top', polys.topMain, polys.topFringe);
+    var botHalf = makeHalf('bottom', polys.botMain, polys.botFringe);
+    var pl = makePetals();
+    document.body.appendChild(botHalf);
+    document.body.appendChild(topHalf);
+    document.body.appendChild(pl.svg);
+
+    var finished = false;
+    function finish() {
+      if (finished) return;
+      finished = true;
+      running = false;
+      for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]);
+      enterScreenEl.style.display = 'none';
+      topHalf.remove();
+      botHalf.remove();
+      done();
+      /* petal layer may finish its last few petals past onDone; it is
+         pointer-events:none and self-removes below (hard cap ~2.9s) */
+      setTimeout(function () {
+        if (pl.raf) cancelAnimationFrame(pl.raf);
+        pl.svg.remove();
+      }, 1300);
+    }
+
+    /* step 1 (0-250ms): fade the intro's foreground children fast;
+       the enter screen's own #f4ecdd background stays -> blank paper */
+    var kids = enterScreenEl.children, k;
+    for (k = 0; k < kids.length; k++) {
+      kids[k].style.transition = 'opacity 0.22s ease';
+      kids[k].style.opacity = '0';
+    }
+
+    /* step 2 (100ms-): shed the 14 tinting petals */
+    later(function () {
+      var last = null;
+      var t0 = performance.now();
+      function loop(now) {
+        pl.raf = null;
+        if (last == null) last = now;
+        var dt = Math.min((now - last) / 1000, 0.064);
+        last = now;
+        var alive = petalTick(pl, dt);
+        if (alive > 0 && now - t0 < 2700) pl.raf = requestAnimationFrame(loop);
+        else pl.svg.remove();
+      }
+      pl.raf = requestAnimationFrame(loop);
+    }, 100);
+
+    /* step 3 (240ms): children are faded -> swap in the identical
+       blank-paper halves above, hide the real screen beneath, then
+       (after a reflow) let the halves ease apart until ~1400ms */
+    later(function () {
+      topHalf.style.visibility = 'visible';
+      botHalf.style.visibility = 'visible';
+      enterScreenEl.style.visibility = 'hidden';
+      void topHalf.offsetWidth;              /* commit start state */
+      requestAnimationFrame(function () {
+        topHalf.classList.add('th-open');
+        botHalf.classList.add('th-open');
+      });
+    }, 240);
+
+    /* extra ambient shower behind the parting paper (optional engine) */
+    later(function () {
+      if (window.PetalWeather && window.PetalWeather.burst) {
+        try {
+          window.PetalWeather.burst({ count: 40, palette: 'mixed', critters: 4 });
+        } catch (e) { /* purely decorative */ }
+      }
+    }, 500);
+
+    /* step 4 (~1600ms): done */
+    later(finish, 1600);
+    /* safety net: onDone must fire even if timers above were cleared
+       by hostile code or an animation/event failure occurred */
+    setTimeout(finish, 2200);
+  }
+
+  return { run: run };
+})();
+
   document.getElementById('enterBtn').addEventListener('click', () => {
-    document.getElementById('enterScreen').classList.add('hidden');
-    document.body.classList.remove('locked');
-    window.scrollTo(0, 0);
-    if (window.__stopPeonies) setTimeout(window.__stopPeonies, 1100);
-    PetalWeather.ambient();
-    PetalWeather.burst({ count: 40, palette: 'mixed', critters: 4 });
+    Threshold.run(document.getElementById('enterScreen'), () => {
+      if (window.__stopPeonies) window.__stopPeonies();
+      document.body.classList.remove('locked');
+      window.scrollTo(0, 0);
+      PetalWeather.ambient();
+    });
   });
 // ================================================================
 // shl- : section heading lockups — scroll-in draw animation.
